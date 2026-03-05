@@ -255,7 +255,7 @@ class ConfiguracionClinica(Base):
     phone = Column(String(20))
     email = Column(String(255))
     website = Column(String(255), nullable=True)
-    license_number = Column("license_number", String(100))
+    license_number = Column("licenseNumber", String(100))
     address = Column(Text)
     specialties = Column(JSON)  # Array of strings
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
