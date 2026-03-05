@@ -16,14 +16,14 @@ export interface Doctor {
   specialty: string
   licenseNumber: string
   status: "disponible" | "en-consulta" | "no-disponible"
-  color: string
+  color?: string
   patientsToday: number
   patientsTotal: number
   rating: number
   reviewCount: number
   yearsExperience: number
   schedule: ScheduleSlot[]
-  nextAppointments: Appointment[]
+  nextAppointments?: Appointment[]
   workSchedule: WorkDay[]
   monthlyStats: {
     completed: number
