@@ -32,10 +32,10 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-backoffice_odonto}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:40013,http://192.168.2.113:40013}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,192.168.2.113}
     ports:
-      - "8000:8000"
+      - "40012:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -51,13 +51,13 @@ services:
       context: ./frontend/dental-back-office
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012}
     container_name: backoffice_frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "3000:3000"
+      - "40013:3000"
     depends_on:
       - backend
     networks:
