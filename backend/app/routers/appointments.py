@@ -96,10 +96,10 @@ def get_doctor_availability(
         schedule_response = {
             "day": schedule.day,
             "active": schedule.active,
-            "startTime": schedule.startTime,
-            "endTime": schedule.endTime,
-            "breakStart": schedule.breakStart or "",
-            "breakEnd": schedule.breakEnd or ""
+            "startTime": schedule.start_time,
+            "endTime": schedule.end_time,
+            "breakStart": schedule.break_start or "",
+            "breakEnd": schedule.break_end or ""
         }
 
     return DoctorAvailabilityResponse(
@@ -176,10 +176,10 @@ def get_doctor_weekly_schedule(
         weekly_schedule.append({
             "day": schedule.day,
             "active": schedule.active,
-            "startTime": schedule.startTime,
-            "endTime": schedule.endTime,
-            "breakStart": schedule.breakStart or "",
-            "breakEnd": schedule.breakEnd or ""
+            "startTime": schedule.start_time,
+            "endTime": schedule.end_time,
+            "breakStart": schedule.break_start or "",
+            "breakEnd": schedule.break_end or ""
         })
 
     return {"weeklySchedule": weekly_schedule}

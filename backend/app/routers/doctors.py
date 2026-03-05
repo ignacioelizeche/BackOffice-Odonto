@@ -101,7 +101,7 @@ def get_doctor(
     # Debug: Log what we're returning
     print(f"[DEBUG] Doctor {doctor.id} - work_schedule count: {len(doctor.work_schedule)}")
     for i, hs in enumerate(doctor.work_schedule):
-        print(f"  [{i}] {hs.day}: {hs.startTime}-{hs.endTime}")
+        print(f"  [{i}] {hs.day}: {hs.start_time}-{hs.end_time}")
 
     return DoctorResponse.from_orm(doctor)
 
@@ -117,7 +117,7 @@ def create_doctor(
     """
     # Check if doctor with same email or license already exists in the same enterprise
     existing_doctor = db.query(Doctor).filter(
-        ((Doctor.email == doctor_data.email) | (Doctor.licenseNumber == doctor_data.licenseNumber)) &
+        ((Doctor.email == doctor_data.email) | (Doctor.license_number == doctor_data.licenseNumber)) &
         (Doctor.empresa_id == current_user.empresa_id)
     ).first()
 
@@ -145,8 +145,8 @@ def create_doctor(
         email=doctor_data.email,
         phone=doctor_data.phone,
         specialty=doctor_data.specialty,
-        licenseNumber=doctor_data.licenseNumber,
-        yearsExperience=doctor_data.yearsExperience,
+        license_number=doctor_data.licenseNumber,
+        years_experience=doctor_data.yearsExperience,
         empresa_id=current_user.empresa_id
     )
 
@@ -175,10 +175,10 @@ def create_doctor(
                 doctor_id=new_doctor.id,
                 day=day_data.day,
                 active=day_data.active,
-                startTime=day_data.startTime,
-                endTime=day_data.endTime,
-                breakStart=day_data.breakStart,
-                breakEnd=day_data.breakEnd,
+                start_time=day_data.startTime,
+                end_time=day_data.endTime,
+                break_start=day_data.breakStart,
+                break_end=day_data.breakEnd,
                 empresa_id=current_user.empresa_id
             )
             db.add(horario)
@@ -235,10 +235,10 @@ def update_doctor_schedule(
             doctor_id=doctor_id,
             day=day_data.day,
             active=day_data.active,
-            startTime=day_data.startTime,
-            endTime=day_data.endTime,
-            breakStart=day_data.breakStart,
-            breakEnd=day_data.breakEnd,
+            start_time=day_data.startTime,
+            end_time=day_data.endTime,
+            break_start=day_data.breakStart,
+            break_end=day_data.breakEnd,
             empresa_id=current_user.empresa_id
         )
         db.add(horario)

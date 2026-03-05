@@ -106,7 +106,7 @@ def get_dashboard_stats(
 
     # Calculate return rate (patients with more than one visit)
     returning_patients = db.query(func.count(Paciente.id)).filter(
-        (Paciente.totalVisits > 1),
+        (Paciente.total_visits > 1),
         *patient_base_filter
     ).scalar() or 0
 
