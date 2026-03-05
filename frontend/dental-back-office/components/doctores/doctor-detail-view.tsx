@@ -48,6 +48,10 @@ function getDoctorStatusBadge(status: string) {
   }
 }
 
+function getDefaultDoctorColor(): string {
+  return "bg-primary"
+}
+
 interface DoctorDetailViewProps {
   doctor: Doctor
   onBack: () => void
@@ -200,10 +204,10 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
         <div className="flex flex-col gap-6">
           {/* Profile card */}
           <Card className="border-border/50 shadow-sm overflow-hidden">
-            <div className={`h-2 ${doctor.color}`} />
+            <div className={`h-2 ${doctor.color ?? getDefaultDoctorColor()}`} />
             <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
               <Avatar className="h-20 w-20">
-                <AvatarFallback className={`${doctor.color} text-primary-foreground text-2xl font-semibold`}>
+                <AvatarFallback className={`${doctor.color ?? getDefaultDoctorColor()} text-primary-foreground text-2xl font-semibold`}>
                   {doctor.initials}
                 </AvatarFallback>
               </Avatar>
@@ -382,7 +386,7 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
           {/* Work Schedule Editor */}
           <WorkScheduleEditor
             workSchedule={doctor.workSchedule}
-            doctorColor={doctor.color}
+            doctorColor={doctor.color ?? getDefaultDoctorColor()}
             onSave={handleSaveSchedule}
             saving={savingSchedule}
           />
