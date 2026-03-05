@@ -8,7 +8,7 @@ const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const _dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
 
 export const metadata: Metadata = {
-  title: 'DentalCare Pro - Panel de Administracion',
+  title: 'AgilDent  - Panel de Administracion',
   description: 'Sistema de gestion para clinica dental',
 }
 
