@@ -22,10 +22,10 @@ export interface Doctor {
   rating: number
   reviewCount: number
   yearsExperience: number
-  schedule: ScheduleSlot[]
+  schedule?: ScheduleSlot[]
   nextAppointments?: Appointment[]
-  workSchedule: WorkDay[]
-  monthlyStats: {
+  workSchedule?: WorkDay[]
+  monthlyStats?: {
     completed: number
     cancelled: number
     revenue: string
