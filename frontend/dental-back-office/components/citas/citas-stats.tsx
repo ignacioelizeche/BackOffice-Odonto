@@ -28,7 +28,7 @@ export function CitasStats() {
         const today = new Date().toISOString().split("T")[0]
         const citasHoy = appointments.filter(a => a.date.startsWith(today))
         const completadas = appointments.filter(a => a.status === "completada")
-        const enCurso = appointments.filter(a => a.status === "en-curso")
+        const enCurso = appointments.filter(a => a.status === "confirmada")
         const canceladas = appointments.filter(a => a.status === "cancelada")
 
         const pendientesDeConfirmar = citasHoy.filter(a => a.status === "pendiente").length
