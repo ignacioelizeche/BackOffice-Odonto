@@ -28,7 +28,7 @@ export interface Doctor {
   monthlyStats?: {
     completed: number
     cancelled: number
-    revenue: string
+    revenue: number
   }
 }
 
@@ -86,7 +86,7 @@ export const doctors: Doctor[] = [
       { day: "Sabado", active: true, startTime: "09:00", endTime: "13:00", breakStart: "", breakEnd: "" },
       { day: "Domingo", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
     ],
-    monthlyStats: { completed: 96, cancelled: 4, revenue: "$14,200" },
+    monthlyStats: { completed: 96, cancelled: 4, revenue: 14200 },
   },
   {
     id: 2,
@@ -127,7 +127,7 @@ export const doctors: Doctor[] = [
       { day: "Sabado", active: true, startTime: "09:00", endTime: "14:00", breakStart: "", breakEnd: "" },
       { day: "Domingo", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
     ],
-    monthlyStats: { completed: 72, cancelled: 6, revenue: "$18,600" },
+    monthlyStats: { completed: 72, cancelled: 6, revenue: 18600 },
   },
   {
     id: 3,
@@ -167,7 +167,7 @@ export const doctors: Doctor[] = [
       { day: "Sabado", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
       { day: "Domingo", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
     ],
-    monthlyStats: { completed: 64, cancelled: 2, revenue: "$12,800" },
+    monthlyStats: { completed: 64, cancelled: 2, revenue: 12800 },
   },
   {
     id: 4,
@@ -208,6 +208,6 @@ export const doctors: Doctor[] = [
       { day: "Sabado", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
       { day: "Domingo", active: false, startTime: "", endTime: "", breakStart: "", breakEnd: "" },
     ],
-    monthlyStats: { completed: 88, cancelled: 3, revenue: "$16,400" },
+    monthlyStats: { completed: 88, cancelled: 3, revenue: 16400 },
   },
 ]
