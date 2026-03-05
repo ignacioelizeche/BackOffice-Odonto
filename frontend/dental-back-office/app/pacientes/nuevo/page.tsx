@@ -5,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function NewPatientPage() {
   return (
-    <DashboardShell>
+    <DashboardShell
+      title="Crear Nuevo Paciente"
+      subtitle="Complete el formulario para registrar un nuevo paciente en el sistema"
+    >
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Crear Nuevo Paciente</h1>
