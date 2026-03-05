@@ -96,11 +96,11 @@ class Paciente(Base):
     phone = Column(String(20))
     age = Column(Integer)
     gender = Column(Enum(GenderEnum))
-    last_visit = Column("last_visit", String(10))  # YYYY-MM-DD
-    next_appt = Column("next_appt", String(10), nullable=True)  # YYYY-MM-DD
+    last_visit = Column("lastVisit", String(10))  # YYYY-MM-DD
+    next_appt = Column("nextAppt", String(10), nullable=True)  # YYYY-MM-DD
     doctor = Column(String(255))
     status = Column(Enum(PatientStatusEnum), default=PatientStatusEnum.nuevo)
-    total_visits = Column("total_visits", Integer, default=0)
+    total_visits = Column("totalVisits", Integer, default=0)
     balance = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -171,13 +171,13 @@ class Doctor(Base):
     email = Column(String(255), unique=True, index=True)
     phone = Column(String(20))
     specialty = Column(String(255))
-    license_number = Column("license_number", String(50), unique=True)
+    license_number = Column("licenseNumber", String(50), unique=True)
     status = Column(Enum(DoctorStatusEnum), default=DoctorStatusEnum.disponible)
-    patients_today = Column("patients_today", Integer, default=0)
-    patients_total = Column("patients_total", Integer, default=0)
+    patients_today = Column("patientsToday", Integer, default=0)
+    patients_total = Column("patientsTotal", Integer, default=0)
     rating = Column(Float, default=0.0)
-    review_count = Column("review_count", Integer, default=0)
-    years_experience = Column("years_experience", Integer)
+    review_count = Column("reviewCount", Integer, default=0)
+    years_experience = Column("yearsExperience", Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -196,10 +196,10 @@ class HorarioDoctor(Base):
     doctor_id = Column(Integer, ForeignKey("doctores.id"))
     day = Column(String(20))
     active = Column(Boolean, default=True)
-    start_time = Column("start_time", String(5))  # HH:MM
-    end_time = Column("end_time", String(5))    # HH:MM
-    break_start = Column("break_start", String(5), nullable=True)  # HH:MM
-    break_end = Column("break_end", String(5), nullable=True)    # HH:MM
+    start_time = Column("startTime", String(5))  # HH:MM
+    end_time = Column("endTime", String(5))    # HH:MM
+    break_start = Column("breakStart", String(5), nullable=True)  # HH:MM
+    break_end = Column("breakEnd", String(5), nullable=True)    # HH:MM
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
