@@ -88,7 +88,6 @@ export function CreatePatientForm() {
       // Preparar datos para enviar al backend
       const patientData: CreatePatientDTO = {
         ...values,
-        status: values.status || "nuevo",
       }
 
       console.log("[Create Patient] Enviando datos del paciente:", patientData)
