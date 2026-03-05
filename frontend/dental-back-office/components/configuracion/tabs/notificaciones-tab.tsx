@@ -145,7 +145,10 @@ export function NotificacionesTab() {
     try {
       await configService.updateNotificationsConfig({
         notifications: values.notifications,
-        emailServer: values.emailServer,
+        emailServer: {
+          ...values.emailServer,
+          useSSL: values.emailServer.useSSL ?? true,
+        },
       })
       form.reset(values)
       setHasChanges(false)
