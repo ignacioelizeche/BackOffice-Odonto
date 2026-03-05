@@ -15,6 +15,15 @@ from pydantic import BaseModel, Field
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 
+@router.options("/login")
+def login_options():
+    """
+    Handle CORS preflight request for login endpoint
+    Returns 200 OK to allow browser to proceed with actual request
+    """
+    return {}
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
