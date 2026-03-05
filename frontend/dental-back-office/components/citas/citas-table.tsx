@@ -36,8 +36,6 @@ function getStatusBadge(status: string) {
       return <Badge className="bg-accent/15 text-accent border-transparent text-xs font-medium">Confirmada</Badge>
     case "pendiente":
       return <Badge className="bg-[hsl(43,74%,66%)]/15 text-[hsl(35,80%,40%)] border-transparent text-xs font-medium">Pendiente</Badge>
-    case "en-curso":
-      return <Badge className="bg-primary/15 text-primary border-transparent text-xs font-medium">En Curso</Badge>
     case "completada":
       return <Badge className="bg-secondary text-secondary-foreground border-transparent text-xs font-medium">Completada</Badge>
     case "cancelada":
@@ -101,10 +99,13 @@ export const CitasTable = forwardRef<() => void, CitasTableProps>(
         setLoading(true)
         setError(null)
         const response = await appointmentsService.getAll()
-        const appointmentsWithCost = response.data.map((a) => ({
-          ...a,
-          cost: typeof a.cost === "number" ? `$${a.cost}` : a.cost,
-        }))
+        const appointmentsWithCost = response.data.map((a) => {
+          const { cost, ...rest } = a
+          return {
+            ...rest,
+            cost: typeof cost === "number" ? `$${cost}` : cost,
+          }
+        }) as AppointmentDisplay[]
         setAppointments(appointmentsWithCost)
       } catch (err) {
         console.error("Error loading appointments:", err)
