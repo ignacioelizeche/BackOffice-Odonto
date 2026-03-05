@@ -40,7 +40,7 @@ interface PatientDetailContentProps {
 }
 
 export function PatientDetailContent({ patient: initialPatient }: PatientDetailContentProps) {
-  const [teeth, setTeeth] = useState<ToothData[]>(initialPatient.teeth)
+  const [teeth, setTeeth] = useState<ToothData[]>(initialPatient.teeth ?? [])
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
 
   const selectedToothData = selectedTooth !== null
@@ -84,7 +84,7 @@ export function PatientDetailContent({ patient: initialPatient }: PatientDetailC
     setTeeth((prev) =>
       prev.map((t) => {
         if (t.number !== toothNumber) return t
-        return { ...t, status }
+        return { ...t, status: status as "pendiente" | "sano" | "tratado" | "en_tratamiento" | "extraccion" }
       })
     )
   }, [])

@@ -85,16 +85,16 @@ export function CreatePatientForm() {
     setIsSubmitting(true)
 
     try {
-      // Preparar datos para enviar al backend
-      const patientData: CreatePatientDTO = {
-        ...values,
-      }
+      // Preparar datos para enviar al backend (excluir status que no es parte de CreatePatientDTO)
+      const { status, ...patientData } = values
 
-      console.log("[Create Patient] Enviando datos del paciente:", patientData)
+      const createData: CreatePatientDTO = patientData as CreatePatientDTO
+
+      console.log("[Create Patient] Enviando datos del paciente:", createData)
       console.log("[Create Patient] Usuario actual:", user)
 
       // Llamar al servicio API
-      const newPatient = await patientsService.create(patientData)
+      const newPatient = await patientsService.create(createData)
 
       console.log("[Create Patient] Paciente creado exitosamente:", newPatient)
 

@@ -6,8 +6,23 @@ import type { ToothData } from "./patients-data"
 import { generateOdontogramTeeth, generateTemporaryTeeth, type OdontogramTooth } from "./odontogram-adapter"
 import "@/styles/odontogram.css"
 
+// Definir tipos para el componente Odontogram
+interface OdontogramProps {
+  teeth: OdontogramTooth[]
+  temporaryTeeth: OdontogramTooth[]
+  showTemporaryTeeth: boolean
+  onToggleTemporaryTeeth: (show: boolean) => void
+  selectedTooth: OdontogramTooth | null
+  onToothClick: (tooth: OdontogramTooth) => void
+  showBiteEffect: boolean
+  onToggleBiteEffect: (show: boolean) => void
+  isAnimatingBite: boolean
+  onSimulateBite: () => void
+}
+
 // Importar Odontogram dinámicamente sin SSR
-const Odontogram = dynamic(
+const Odontogram = dynamic<OdontogramProps>(
+  // @ts-expect-error op-odontogram doesn't have type declarations
   () => import("op-odontogram").then((mod) => mod.Odontogram),
   { ssr: false }
 )
