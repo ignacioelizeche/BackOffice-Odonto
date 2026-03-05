@@ -188,8 +188,8 @@ export const CitasTable = forwardRef<() => void, CitasTableProps>(
         bValue = b.status.toLowerCase()
         break
       case "costo":
-        aValue = parseFloat(a.cost.replace("$", ""))
-        bValue = parseFloat(b.cost.replace("$", ""))
+        aValue = parseFloat((a.cost as string).replace("$", ""))
+        bValue = parseFloat((b.cost as string).replace("$", ""))
         break
     }
 
