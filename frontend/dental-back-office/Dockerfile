@@ -14,7 +14,11 @@ RUN npm install
 # Copiar código fuente (solo lo que existe)
 COPY . .
 
-# Build
+# Accept build argument for API URL
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+# Build with environment variables
 RUN npm run build
 
 # Runtime stage
