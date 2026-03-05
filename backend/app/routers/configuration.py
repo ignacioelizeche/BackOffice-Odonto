@@ -22,6 +22,42 @@ from app.auth import get_current_user, hash_password, verify_password, require_r
 
 router = APIRouter(prefix="/configuracion", tags=["Configuración"])
 
+# CORS preflight handlers
+@router.options("/clinica")
+def options_clinic():
+    """Handle CORS preflight for clinic config"""
+    return {}
+
+@router.options("/horario")
+def options_schedule():
+    """Handle CORS preflight for schedule config"""
+    return {}
+
+@router.options("/seguridad")
+def options_security():
+    """Handle CORS preflight for security config"""
+    return {}
+
+@router.options("/facturacion")
+def options_billing():
+    """Handle CORS preflight for billing config"""
+    return {}
+
+@router.options("/notificaciones")
+def options_notifications():
+    """Handle CORS preflight for notifications config"""
+    return {}
+
+@router.options("/usuarios")
+def options_users():
+    """Handle CORS preflight for users"""
+    return {}
+
+@router.options("/usuarios/{user_id}")
+def options_user_detail(user_id: int):
+    """Handle CORS preflight for user detail"""
+    return {}
+
 # ============= CLINIC CONFIG =============
 @router.get("/clinica", response_model=ClinicConfigResponse)
 def get_clinic_config(

@@ -18,6 +18,28 @@ from app.utils.email_service import email_service
 
 router = APIRouter(prefix="/doctores", tags=["Doctores"])
 
+# CORS preflight handlers
+@router.options("")
+def options_doctors():
+    """Handle CORS preflight for doctors list"""
+    return {}
+
+@router.options("/{doctor_id}")
+def options_doctor_detail(doctor_id: int):
+    """Handle CORS preflight for doctor detail"""
+    return {}
+
+@router.options("/{doctor_id}/schedule")
+def options_doctor_schedule(doctor_id: int):
+    """Handle CORS preflight for doctor schedule"""
+    return {}
+
+@router.options("/{doctor_id}/status")
+def options_doctor_status(doctor_id: int):
+    """Handle CORS preflight for doctor status"""
+    return {}
+
+
 @router.get("", response_model=DoctorsListResponse)
 def list_doctors(
     db: Session = Depends(get_db),

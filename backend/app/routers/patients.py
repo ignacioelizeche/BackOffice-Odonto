@@ -27,6 +27,27 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pacientes", tags=["Pacientes"])
 
+# CORS preflight handlers
+@router.options("")
+def options_patients():
+    """Handle CORS preflight for patients list"""
+    return {}
+
+@router.options("/{patient_id}")
+def options_patient_detail(patient_id: int):
+    """Handle CORS preflight for patient detail"""
+    return {}
+
+@router.options("/{patient_id}/teeth")
+def options_patient_teeth(patient_id: int):
+    """Handle CORS preflight for patient teeth"""
+    return {}
+
+@router.options("/{patient_id}/dental-records")
+def options_patient_records(patient_id: int):
+    """Handle CORS preflight for patient dental records"""
+    return {}
+
 ALLOWED_MIME_TYPES = {
     "application/pdf",
     "image/jpeg",

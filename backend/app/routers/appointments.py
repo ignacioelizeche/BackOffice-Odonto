@@ -31,6 +31,27 @@ from app.services.notification_service import (
 router = APIRouter(prefix="/citas", tags=["Citas"])
 logger = logging.getLogger(__name__)
 
+# CORS preflight handlers
+@router.options("")
+def options_appointments():
+    """Handle CORS preflight for appointments list"""
+    return {}
+
+@router.options("/{appointment_id}")
+def options_appointment_detail(appointment_id: int):
+    """Handle CORS preflight for appointment detail"""
+    return {}
+
+@router.options("/disponibilidad/{doctor_id}")
+def options_availability(doctor_id: int):
+    """Handle CORS preflight for availability"""
+    return {}
+
+@router.options("/{appointment_id}/status")
+def options_appointment_status(appointment_id: int):
+    """Handle CORS preflight for appointment status"""
+    return {}
+
 # ============= AVAILABILITY ENDPOINTS =============
 
 @router.get("/disponibilidad/{doctor_id}", response_model=DoctorAvailabilityResponse)

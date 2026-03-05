@@ -13,6 +13,23 @@ from sqlalchemy import func, desc
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
+# CORS preflight handlers
+@router.options("/stats")
+def options_stats():
+    """Handle CORS preflight for stats endpoint"""
+    return {}
+
+@router.options("/activities")
+def options_activities():
+    """Handle CORS preflight for activities endpoint"""
+    return {}
+
+@router.options("/chart")
+def options_chart():
+    """Handle CORS preflight for chart endpoint"""
+    return {}
+
+
 def get_relative_time(datetime_obj: datetime) -> str:
     """Calculate relative time string from a datetime"""
     # Ensure both datetimes are in UTC for comparison
