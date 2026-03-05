@@ -26,7 +26,7 @@ import logging
 
 # Create database tables
 # NOTE: Tablas gestionadas por Alembic. Usar 'alembic upgrade head' en lugar de create_all.
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 # Determine environment
 _environment = os.getenv("ENVIRONMENT", "development")
