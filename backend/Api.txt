@@ -1,0 +1,1733 @@
+1. Pacientes
+GET /api/pacientes
+
+Lista todos los pacientes con filtros opcionales.
+
+Query params:
+?search=maria&status=activo&doctor=Dr. Carlos Mendez&page=1&limit=10
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Maria Garcia Lopez",
+      "initials": "MG",
+      "email": "maria.garcia@email.com",
+      "phone": "+52 55 1234 5678",
+      "age": 34,
+      "gender": "Femenino",
+      "lastVisit": "2026-02-10",
+      "nextAppt": "2026-02-15",
+      "doctor": "Dr. Carlos Mendez",
+      "status": "activo",
+      "treatments": ["Limpieza dental", "Blanqueamiento"],
+      "totalVisits": 12,
+      "balance": 0
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 42,
+    "totalPages": 5
+  }
+}
+
+Response (400):
+{
+  "error": "Parámetros inválidos",
+  "code": "INVALID_PARAMS"
+}
+
+Response (401):
+{
+  "error": "No autorizado",
+  "code": "UNAUTHORIZED"
+}
+
+Response (500):
+{
+  "error": "Error interno del servidor",
+  "code": "INTERNAL_ERROR"
+}
+
+GET /api/pacientes/:id
+
+Detalle completo del paciente incluyendo odontograma.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "id": 1,
+  "name": "Maria Garcia Lopez",
+  "initials": "MG",
+  "email": "maria.garcia@email.com",
+  "phone": "+52 55 1234 5678",
+  "age": 34,
+  "gender": "Femenino",
+  "lastVisit": "2026-02-10",
+  "nextAppt": "2026-02-15",
+  "doctor": "Dr. Carlos Mendez",
+  "status": "activo",
+  "treatments": ["Limpieza dental", "Blanqueamiento"],
+  "totalVisits": 12,
+  "balance": 0,
+  "teeth": [
+    {
+      "number": 16,
+      "name": "Primer molar sup. der.",
+      "status": "tratado",
+      "records": [
+        {
+          "id": 1,
+          "date": "2026-01-15",
+          "treatment": "Resina compuesta",
+          "doctor": "Dr. Carlos Mendez",
+          "notes": "Caries oclusal clase I. Se realizo restauracion con resina compuesta A2.",
+          "cost": 1200,
+          "attachments": [
+            {
+              "id": 1,
+              "name": "radiografia.pdf",
+              "size": "2.5 MB",
+              "type": "application/pdf"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Response (404):
+{
+  "error": "Paciente no encontrado",
+  "code": "PATIENT_NOT_FOUND"
+}
+
+POST /api/pacientes
+
+Crear un nuevo paciente.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "name": "Nuevo Paciente",
+  "email": "nuevo@email.com",
+  "phone": "+52 55 9999 8888",
+  "age": 30,
+  "gender": "Masculino",
+  "doctor": "Dr. Carlos Mendez"
+}
+
+Response (201):
+{
+  "id": 11,
+  "name": "Nuevo Paciente",
+  "initials": "NP",
+  "email": "nuevo@email.com",
+  "status": "nuevo",
+  "message": "Paciente creado exitosamente"
+}
+
+Response (400):
+{
+  "error": "Email ya registrado o datos inválidos",
+  "code": "INVALID_DATA"
+}
+
+PUT /api/pacientes/:id
+
+Actualizar datos de un paciente.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "name": "Maria Garcia Lopez",
+  "email": "maria.nueva@email.com",
+  "phone": "+52 55 1234 5678",
+  "age": 35,
+  "gender": "Femenino",
+  "doctor": "Dr. Carlos Mendez",
+  "status": "activo"
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Paciente actualizado exitosamente"
+}
+
+DELETE /api/pacientes/:id
+
+Eliminar un paciente.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "message": "Paciente eliminado exitosamente"
+}
+
+Response (404):
+{
+  "error": "Paciente no encontrado",
+  "code": "PATIENT_NOT_FOUND"
+}
+
+POST /api/pacientes/:id/dientes/:toothNumber/registros
+
+Agregar un registro dental a un diente especifico.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: multipart/form-data (si hay archivos) o application/json
+
+Request body:
+{
+  "treatment": "Resina compuesta",
+  "doctor": "Dr. Carlos Mendez",
+  "notes": "Caries oclusal clase I. Restauracion con resina A2.",
+  "cost": 1200
+}
+
+Con archivos (multipart):
+- treatment: string
+- doctor: string
+- notes: string (opcional)
+- cost: number
+- files: file[] (máx 10 MB cada archivo)
+
+Response (201):
+{
+  "id": 35,
+  "toothNumber": 16,
+  "date": "2026-02-13",
+  "toothNewStatus": "tratado",
+  "attachments": [
+    {
+      "id": 1,
+      "name": "radiografia.pdf",
+      "size": "2.5 MB"
+    }
+  ],
+  "message": "Registro dental agregado exitosamente"
+}
+
+2. Doctores
+GET /api/doctores
+
+Lista todos los doctores.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Dr. Carlos Mendez",
+      "initials": "CM",
+      "email": "carlos.mendez@dentalcare.com",
+      "phone": "+52 55 1111 2222",
+      "specialty": "Odontologia General",
+      "licenseNumber": "CDO-2015-4821",
+      "status": "disponible",
+      "patientsToday": 8,
+      "patientsTotal": 342,
+      "rating": 4.9,
+      "reviewCount": 128,
+      "yearsExperience": 11
+    }
+  ]
+}
+
+GET /api/doctores/:id
+
+Detalle de doctor con agenda, horario y estadisticas.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "id": 1,
+  "name": "Dr. Carlos Mendez",
+  "initials": "CM",
+  "email": "carlos.mendez@dentalcare.com",
+  "phone": "+52 55 1111 2222",
+  "specialty": "Odontologia General",
+  "licenseNumber": "CDO-2015-4821",
+  "status": "disponible",
+  "patientsToday": 8,
+  "patientsTotal": 342,
+  "rating": 4.9,
+  "reviewCount": 128,
+  "yearsExperience": 11,
+  "schedule": [
+    { "time": "09:00", "patient": "Maria Garcia", "treatment": "Limpieza dental", "status": "ocupado" },
+    { "time": "09:30", "patient": null, "treatment": null, "status": "libre" }
+  ],
+  "workSchedule": [
+    { "day": "Lunes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Domingo", "active": false, "startTime": "", "endTime": "", "breakStart": "", "breakEnd": "" }
+  ],
+  "monthlyStats": {
+    "completed": 96,
+    "cancelled": 4,
+    "revenue": 14200
+  }
+}
+
+PUT /api/doctores/:id/horario
+
+Actualizar el horario de trabajo del doctor.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "workSchedule": [
+    { "day": "Lunes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Martes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Miercoles", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Jueves", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Viernes", "active": true, "startTime": "09:00", "endTime": "16:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Sabado", "active": true, "startTime": "09:00", "endTime": "13:00", "breakStart": "", "breakEnd": "" },
+    { "day": "Domingo", "active": false, "startTime": "", "endTime": "", "breakStart": "", "breakEnd": "" }
+  ]
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Horario actualizado exitosamente"
+}
+
+3. Citas
+GET /api/citas
+
+Lista de citas con filtros.
+
+Query params:
+?date=2026-02-12&status=confirmada&doctor=Dr. Carlos Mendez&search=maria&page=1&limit=10
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "patient": "Maria Garcia Lopez",
+      "patientInitials": "MG",
+      "patientAge": 34,
+      "patientPhone": "+52 55 1234 5678",
+      "doctor": "Dr. Carlos Mendez",
+      "doctorSpecialty": "Odontologia General",
+      "treatment": "Limpieza dental",
+      "date": "2026-02-12",
+      "time": "09:00",
+      "duration": "30 min",
+      "status": "completada",
+      "notes": "Limpieza rutinaria semestral.",
+      "cost": 800
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 16,
+    "totalPages": 2
+  }
+}
+
+GET /api/citas/:id
+
+Detalle de una cita.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "id": 1,
+  "patient": "Maria Garcia Lopez",
+  "patientInitials": "MG",
+  "patientAge": 34,
+  "patientPhone": "+52 55 1234 5678",
+  "doctor": "Dr. Carlos Mendez",
+  "doctorSpecialty": "Odontologia General",
+  "treatment": "Limpieza dental",
+  "date": "2026-02-12",
+  "time": "09:00",
+  "duration": "30 min",
+  "status": "completada",
+  "notes": "Limpieza rutinaria semestral.",
+  "cost": 800
+}
+
+POST /api/citas
+
+Crear nueva cita.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "patientId": 1,
+  "doctorId": 1,
+  "treatment": "Limpieza dental",
+  "date": "2026-02-20",
+  "time": "10:00",
+  "duration": "30 min",
+  "cost": 800,
+  "notes": "Limpieza rutinaria programada."
+}
+
+Response (201):
+{
+  "id": 17,
+  "status": "pendiente",
+  "message": "Cita creada exitosamente"
+}
+
+Response (400):
+{
+  "error": "Doctor no disponible en esa fecha/hora",
+  "code": "DOCTOR_UNAVAILABLE"
+}
+
+PUT /api/citas/:id
+
+Editar una cita existente.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "patientId": 1,
+  "doctorId": 1,
+  "treatment": "Limpieza dental",
+  "date": "2026-02-22",
+  "time": "11:00",
+  "duration": "30 min",
+  "cost": 800,
+  "status": "confirmada",
+  "notes": "Reprogramada para el 22."
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Cita actualizada exitosamente"
+}
+
+PATCH /api/citas/:id/estado
+
+Cambiar solo el estado de una cita (confirmar, completar, cancelar).
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "status": "completada"
+}
+
+Estados válidos: pendiente, confirmada, completada, cancelada
+
+Response (200):
+{
+  "id": 1,
+  "status": "completada",
+  "message": "Estado actualizado exitosamente"
+}
+
+DELETE /api/citas/:id
+
+Eliminar una cita.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "message": "Cita eliminada exitosamente"
+}
+
+4. Historiales Clinicos
+GET /api/historiales
+
+Lista de registros clinicos con filtros.
+
+Query params:
+?search=garcia&doctor=Dr. Carlos Mendez&status=completado&page=1&limit=10
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "patientId": 1,
+      "patient": "Maria Garcia Lopez",
+      "patientInitials": "MG",
+      "date": "2026-02-12",
+      "doctor": "Dr. Carlos Mendez",
+      "treatment": "Limpieza dental profesional",
+      "diagnosis": "Acumulacion de placa y sarro moderado",
+      "tooth": "General",
+      "notes": "Se realizo limpieza con ultrasonido...",
+      "cost": 800,
+      "status": "completado",
+      "attachments": 2
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 12,
+    "totalPages": 2
+  }
+}
+
+GET /api/historiales/:id
+
+Detalle de un registro clinico.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "id": 1,
+  "patientId": 1,
+  "patient": "Maria Garcia Lopez",
+  "patientInitials": "MG",
+  "date": "2026-02-12",
+  "doctor": "Dr. Carlos Mendez",
+  "treatment": "Limpieza dental profesional",
+  "diagnosis": "Acumulacion de placa y sarro moderado",
+  "tooth": "General",
+  "notes": "Se realizo limpieza con ultrasonido...",
+  "cost": 800,
+  "status": "completado",
+  "attachments": [
+    {
+      "id": 1,
+      "name": "radiografia.pdf",
+      "size": "2.5 MB",
+      "downloadUrl": "/api/historiales/1/attachments/1"
+    }
+  ]
+}
+
+5. Configuracion
+GET /api/configuracion/clinica
+
+Obtener datos de la clinica.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "name": "DentalCare Pro",
+  "rfc": "DCP-210415-AB3",
+  "phone": "+52 55 1234 5678",
+  "email": "contacto@dentalcarepro.com",
+  "website": "www.dentalcarepro.com",
+  "licenseNumber": "LS-2021-CDMX-04521",
+  "address": "Av. Insurgentes Sur 1234, Col. Del Valle...",
+  "specialties": ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"]
+}
+
+PUT /api/configuracion/clinica
+
+Actualizar datos de la clinica.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body: Mismo formato que el response de GET
+
+Response (200):
+{
+  "message": "Configuración de la clínica actualizada exitosamente"
+}
+
+GET /api/configuracion/facturacion
+
+Obtener configuración de facturación.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "currency": "mxn",
+  "taxRate": 16,
+  "invoicePrefix": "FAC-2026-",
+  "nextNumber": 422,
+  "autoInvoice": true,
+  "paymentReminder": true,
+  "summary": {
+    "monthlyRevenue": 148520,
+    "pendingBalance": 24300,
+    "overdueInvoices": 8
+  }
+}
+
+PUT /api/configuracion/facturacion
+
+Actualizar configuración de facturación.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "currency": "mxn",
+  "taxRate": 16,
+  "invoicePrefix": "FAC-2026-",
+  "nextNumber": 422,
+  "autoInvoice": true,
+  "paymentReminder": true
+}
+
+Response (200):
+{
+  "message": "Configuración de facturación actualizada exitosamente"
+}
+
+GET /api/configuracion/seguridad
+
+Obtener configuración de seguridad.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "twoFactor": false,
+  "autoLogout": true,
+  "activityLog": true,
+  "dataEncryption": true
+}
+
+PUT /api/configuracion/seguridad
+
+Actualizar configuración de seguridad.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body: Mismo formato que el response de GET
+
+Response (200):
+{
+  "message": "Configuración de seguridad actualizada exitosamente"
+}
+
+PUT /api/configuracion/contrasena
+
+Cambiar contraseña del usuario.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "currentPassword": "password_actual",
+  "newPassword": "nueva_password",
+  "confirmPassword": "nueva_password"
+}
+
+Response (200):
+{
+  "message": "Contraseña actualizada exitosamente"
+}
+
+Response (400):
+{
+  "error": "Contraseña actual incorrecta",
+  "code": "INVALID_PASSWORD"
+}
+
+GET /api/configuracion/horario
+
+Obtener configuración de horarios.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "appointmentDuration": 30,
+  "timeBetweenAppointments": 15,
+  "maxAppointmentsPerDoctorPerDay": 12,
+  "minAdvanceBookingDays": 1,
+  "workDays": [
+    {
+      "day": "Lunes",
+      "active": true,
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakStart": "13:00",
+      "breakEnd": "14:00"
+    },
+    {
+      "day": "Domingo",
+      "active": false,
+      "startTime": "",
+      "endTime": "",
+      "breakStart": "",
+      "breakEnd": ""
+    }
+  ]
+}
+
+PUT /api/configuracion/horario
+
+Actualizar configuración de horarios.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "appointmentDuration": 30,
+  "timeBetweenAppointments": 15,
+  "maxAppointmentsPerDoctorPerDay": 12,
+  "minAdvanceBookingDays": 1,
+  "workDays": [
+    {
+      "day": "Lunes",
+      "active": true,
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakStart": "13:00",
+      "breakEnd": "14:00"
+    }
+  ]
+}
+
+Response (200):
+{
+  "message": "Configuración de horarios actualizada exitosamente"
+}
+
+GET /api/configuracion/notificaciones
+
+Obtener configuración de notificaciones.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "notifications": [
+    {
+      "id": "appointment_confirmation",
+      "name": "Confirmación de cita",
+      "description": "Enviar confirmación automática de cita al paciente",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "reminder_24h",
+      "name": "Recordatorio 24 horas",
+      "description": "Enviar recordatorio 24 horas antes de la cita",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "reminder_2h",
+      "name": "Recordatorio 2 horas",
+      "description": "Enviar recordatorio SMS 2 horas antes",
+      "enabled": false,
+      "type": "sms"
+    },
+    {
+      "id": "cancellation_notice",
+      "name": "Notificación de cancelación",
+      "description": "Notificar cuando se cancela una cita",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "post_treatment_survey",
+      "name": "Encuesta post-tratamiento",
+      "description": "Enviar encuesta después de completar tratamiento",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "birthday_greeting",
+      "name": "Saludo de cumpleaños",
+      "description": "Enviar saludo y ofertas el día del cumpleaños",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "patient_reactivation",
+      "name": "Reactivación de paciente",
+      "description": "Enviar email de reactivación a pacientes inactivos",
+      "enabled": false,
+      "type": "email"
+    },
+    {
+      "id": "daily_summary",
+      "name": "Resumen diario",
+      "description": "Enviar resumen diario de citas y actividades",
+      "enabled": true,
+      "type": "email"
+    }
+  ],
+  "emailServer": {
+    "smtpServer": "smtp.gmail.com",
+    "smtpPort": 587,
+    "senderEmail": "notificaciones@dentalcarepro.com",
+    "senderName": "DentalCare Pro",
+    "useSSL": true
+  }
+}
+
+PUT /api/configuracion/notificaciones
+
+Actualizar configuración de notificaciones.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "notifications": [
+    {
+      "id": "appointment_confirmation",
+      "enabled": true
+    },
+    {
+      "id": "reminder_24h",
+      "enabled": false
+    }
+  ],
+  "emailServer": {
+    "smtpServer": "smtp.gmail.com",
+    "smtpPort": 587,
+    "senderEmail": "notificaciones@dentalcarepro.com",
+    "senderName": "DentalCare Pro",
+    "useSSL": true
+  }
+}
+
+Response (200):
+{
+  "message": "Configuración de notificaciones actualizada exitosamente"
+}
+
+GET /api/configuracion/usuarios
+
+Listar todos los usuarios.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Admin Principal",
+      "initials": "AP",
+      "email": "admin@dentalcare.com",
+      "role": "Administrador",
+      "lastAccess": "2026-02-13T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Recepcionista Principal",
+      "initials": "RP",
+      "email": "recepcion@dentalcare.com",
+      "role": "Recepcionista",
+      "lastAccess": "2026-02-13T09:15:00Z"
+    }
+  ]
+}
+
+POST /api/configuracion/usuarios
+
+Crear un nuevo usuario.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "name": "Nuevo Usuario",
+  "email": "nuevo@dentalcare.com",
+  "role": "Recepcionista",
+  "password": "password123"
+}
+
+Roles válidos: Administrador, Recepcionista, Doctor, Asistente
+
+Response (201):
+{
+  "id": 3,
+  "name": "Nuevo Usuario",
+  "initials": "NU",
+  "email": "nuevo@dentalcare.com",
+  "role": "Recepcionista",
+  "message": "Usuario creado exitosamente"
+}
+
+Response (400):
+{
+  "error": "Email ya está registrado",
+  "code": "EMAIL_EXISTS"
+}
+
+PUT /api/configuracion/usuarios/:id
+
+Actualizar un usuario.
+
+Headers requeridos:
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request body:
+{
+  "name": "Nombre Actualizado",
+  "email": "nuevo_email@dentalcare.com",
+  "role": "Recepcionista"
+}
+
+Response (200):
+{
+  "message": "Usuario actualizado exitosamente"
+}
+
+DELETE /api/configuracion/usuarios/:id
+
+Eliminar un usuario.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "message": "Usuario eliminado exitosamente"
+}
+
+Response (403):
+{
+  "error": "No puede eliminar el único administrador",
+  "code": "CANNOT_DELETE_LAST_ADMIN"
+}
+
+6. Dashboard (Panel Principal)
+GET /api/dashboard/stats
+
+Estadisticas generales para el panel principal.
+
+Headers requeridos:
+Authorization: Bearer <token>
+
+Response (200):
+{
+  "todayAppointments": 24,
+  "activePatients": 1284,
+  "monthlyRevenue": 48520,
+  "returnRate": 89,
+  "weeklyChart": {
+    "labels": ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab"],
+    "scheduled": [22, 18, 24, 20, 19, 12],
+    "completed": [20, 16, 22, 18, 17, 11]
+  },
+  "recentActivity": [
+    {
+      "type": "appointment",
+      "message": "Nueva cita programada para Maria Garcia",
+      "time": "Hace 5 min"
+    },
+    {
+      "type": "patient",
+      "message": "Nuevo paciente registrado: Juan Rodriguez",
+      "time": "Hace 30 min"
+    }
+  ]
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+INFORMACIÓN DE AUTENTICACIÓN Y SEGURIDAD
+
+Headers Globales (Requeridos en todos los endpoints):
+
+1. Authorization: Bearer <JWT_TOKEN>
+   - Se espera un token JWT válido
+   - El token se obtiene en el endpoint de login (no documentado aquí, implementar según tu servidor)
+   - Duración típica del token: 24 horas
+
+2. Content-Type: application/json
+   - Requerido para todos los POST, PUT, PATCH que envíen JSON
+   - Para multipart/form-data, NO incluir este header (el navegador lo agrega automáticamente)
+
+Códigos de Error Estándar:
+
+400 Bad Request - Parámetros inválidos o datos incompletos
+401 Unauthorized - Token no válido o expirado
+403 Forbidden - Usuario sin permisos para esta acción
+404 Not Found - Recurso no encontrado
+409 Conflict - Conflicto (ej: email duplicado)
+422 Unprocessable Entity - Validación fallada
+500 Internal Server Error - Error en el servidor
+
+Formato de Error Estándar (todas las respuestas de error):
+
+{
+  "error": "Descripción del error",
+  "code": "ERROR_CODE"
+}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TIPOS DE DATOS Y VALIDACIONES
+
+Fechas: formato ISO 8601 (YYYY-MM-DD)
+Horas: formato 24 horas (HH:MM)
+Moneda: números enteros (centavos o pesos según currency)
+Teléfono: con código de país (+52 para México)
+Email: válido según RFC 5322
+Archivos: máximo 10 MB por archivo, total 50 MB por paciente
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Resumen de Rutas
+
+Metodo	Path	Descripcion
+GET	/api/dashboard/stats	Estadisticas del panel
+GET	/api/pacientes	Listar pacientes
+POST	/api/pacientes	Crear paciente
+GET	/api/pacientes/:id	Detalle paciente + odontograma
+PUT	/api/pacientes/:id	Actualizar paciente
+DELETE	/api/pacientes/:id	Eliminar paciente
+POST	/api/pacientes/:id/dientes/:toothNumber/registros	Agregar registro dental
+GET	/api/doctores	Listar doctores
+GET	/api/doctores/:id	Detalle doctor
+PUT	/api/doctores/:id/horario	Actualizar horario
+GET	/api/citas	Listar citas
+POST	/api/citas	Crear cita
+GET	/api/citas/:id	Detalle cita
+PUT	/api/citas/:id	Editar cita
+PATCH	/api/citas/:id/estado	Cambiar estado cita
+DELETE	/api/citas/:id	Eliminar cita
+GET	/api/historiales	Listar historiales
+GET	/api/historiales/:id	Detalle historial
+GET	/api/configuracion/clinica	Datos clinica
+PUT	/api/configuracion/clinica	Actualizar clinica
+GET	/api/configuracion/facturacion	Config facturacion
+PUT	/api/configuracion/facturacion	Actualizar facturacion
+GET	/api/configuracion/seguridad	Config seguridad
+PUT	/api/configuracion/seguridad	Actualizar seguridad
+PUT	/api/configuracion/contrasena	Cambiar contrasena
+GET	/api/configuracion/horario	Config horarios
+PUT	/api/configuracion/horario	Actualizar horarios
+GET	/api/configuracion/notificaciones	Config notificaciones
+PUT	/api/configuracion/notificaciones	Actualizar notificaciones
+GET	/api/configuracion/usuarios	Listar usuarios
+POST	/api/configuracion/usuarios	Crear usuario
+PUT	/api/configuracion/usuarios/:id	Actualizar usuario
+DELETE	/api/configuracion/usuarios/:id	Eliminar usuario
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TOTAL: 34 ENDPOINTS COMPLETAMENTE DOCUMENTADOS
+
+Todos los endpoints están listos para implementación en backend.
+Todos los servicios frontend están tipados en /services/config.service.ts
+Toda documentación de implementación en /CONFIGURACION_ENDPOINTS.md
+GET /api/pacientes/:id
+
+Detalle completo del paciente incluyendo odontograma.
+
+Response (200):
+{
+  "id": 1,
+  "name": "Maria Garcia Lopez",
+  "initials": "MG",
+  "email": "maria.garcia@email.com",
+  "phone": "+52 55 1234 5678",
+  "age": 34,
+  "gender": "Femenino",
+  "lastVisit": "2026-02-10",
+  "nextAppt": "2026-02-15",
+  "doctor": "Dr. Carlos Mendez",
+  "status": "activo",
+  "treatments": ["Limpieza dental", "Blanqueamiento"],
+  "totalVisits": 12,
+  "balance": 0,
+  "teeth": [
+    {
+      "number": 16,
+      "name": "Primer molar sup. der.",
+      "status": "tratado",
+      "records": [
+        {
+          "id": 1,
+          "date": "2026-01-15",
+          "treatment": "Resina compuesta",
+          "doctor": "Dr. Carlos Mendez",
+          "notes": "Caries oclusal clase I. Se realizo restauracion con resina compuesta A2.",
+          "cost": 1200
+        }
+      ]
+    }
+  ]
+}
+POST /api/pacientes
+
+Crear un nuevo paciente.
+
+Request body:
+{
+  "name": "Nuevo Paciente",
+  "email": "nuevo@email.com",
+  "phone": "+52 55 9999 8888",
+  "age": 30,
+  "gender": "Masculino",
+  "doctor": "Dr. Carlos Mendez"
+}
+
+Response (201):
+{
+  "id": 11,
+  "name": "Nuevo Paciente",
+  "status": "nuevo",
+  "message": "Paciente creado exitosamente"
+}
+PUT /api/pacientes/:id
+
+Actualizar datos de un paciente.
+
+Request body:
+{
+  "name": "Maria Garcia Lopez",
+  "email": "maria.nueva@email.com",
+  "phone": "+52 55 1234 5678",
+  "age": 35,
+  "gender": "Femenino",
+  "doctor": "Dr. Carlos Mendez",
+  "status": "activo"
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Paciente actualizado exitosamente"
+}
+POST /api/pacientes/:id/dientes/:toothNumber/registros
+
+Agregar un registro dental a un diente especifico.
+
+Request body:
+{
+  "treatment": "Resina compuesta",
+  "doctor": "Dr. Carlos Mendez",
+  "notes": "Caries oclusal clase I. Restauracion con resina A2.",
+  "cost": 1200
+}
+
+Response (201):
+{
+  "id": 35,
+  "toothNumber": 16,
+  "date": "2026-02-13",
+  "toothNewStatus": "tratado",
+  "message": "Registro dental agregado exitosamente"
+}
+2. Doctores
+GET /api/doctores
+
+Lista todos los doctores.
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Dr. Carlos Mendez",
+      "initials": "CM",
+      "email": "carlos.mendez@dentalcare.com",
+      "phone": "+52 55 1111 2222",
+      "specialty": "Odontologia General",
+      "licenseNumber": "CDO-2015-4821",
+      "status": "disponible",
+      "patientsToday": 8,
+      "patientsTotal": 342,
+      "rating": 4.9,
+      "reviewCount": 128,
+      "yearsExperience": 11
+    }
+  ]
+}
+GET /api/doctores/:id
+
+Detalle de doctor con agenda, horario y estadisticas.
+
+Response (200):
+{
+  "id": 1,
+  "name": "Dr. Carlos Mendez",
+  "initials": "CM",
+  "email": "carlos.mendez@dentalcare.com",
+  "phone": "+52 55 1111 2222",
+  "specialty": "Odontologia General",
+  "licenseNumber": "CDO-2015-4821",
+  "status": "disponible",
+  "patientsToday": 8,
+  "patientsTotal": 342,
+  "rating": 4.9,
+  "reviewCount": 128,
+  "yearsExperience": 11,
+  "schedule": [
+    { "time": "09:00", "patient": "Maria Garcia", "treatment": "Limpieza dental", "status": "ocupado" },
+    { "time": "09:30", "patient": null, "treatment": null, "status": "libre" }
+  ],
+  "workSchedule": [
+    { "day": "Lunes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Domingo", "active": false, "startTime": "", "endTime": "", "breakStart": "", "breakEnd": "" }
+  ],
+  "monthlyStats": {
+    "completed": 96,
+    "cancelled": 4,
+    "revenue": 14200
+  }
+}
+PUT /api/doctores/:id/horario
+
+Actualizar el horario de trabajo del doctor.
+
+Request body:
+{
+  "workSchedule": [
+    { "day": "Lunes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Martes", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Miercoles", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Jueves", "active": true, "startTime": "09:00", "endTime": "18:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Viernes", "active": true, "startTime": "09:00", "endTime": "16:00", "breakStart": "13:00", "breakEnd": "14:00" },
+    { "day": "Sabado", "active": true, "startTime": "09:00", "endTime": "13:00", "breakStart": "", "breakEnd": "" },
+    { "day": "Domingo", "active": false, "startTime": "", "endTime": "", "breakStart": "", "breakEnd": "" }
+  ]
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Horario actualizado exitosamente"
+}
+3. Citas
+GET /api/citas
+
+Lista de citas con filtros.
+
+Query params:
+?date=2026-02-12&status=confirmada&doctor=Dr. Carlos Mendez&search=maria&page=1&limit=10
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "patient": "Maria Garcia Lopez",
+      "patientInitials": "MG",
+      "patientAge": 34,
+      "patientPhone": "+52 55 1234 5678",
+      "doctor": "Dr. Carlos Mendez",
+      "doctorSpecialty": "Odontologia General",
+      "treatment": "Limpieza dental",
+      "date": "2026-02-12",
+      "time": "09:00",
+      "duration": "30 min",
+      "status": "completada",
+      "notes": "Limpieza rutinaria semestral.",
+      "cost": 800
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 16,
+    "totalPages": 2
+  }
+}
+GET /api/citas/:id
+
+Detalle de una cita.
+
+Response (200):
+{
+  "id": 1,
+  "patient": "Maria Garcia Lopez",
+  "patientInitials": "MG",
+  "patientAge": 34,
+  "patientPhone": "+52 55 1234 5678",
+  "doctor": "Dr. Carlos Mendez",
+  "doctorSpecialty": "Odontologia General",
+  "treatment": "Limpieza dental",
+  "date": "2026-02-12",
+  "time": "09:00",
+  "duration": "30 min",
+  "status": "completada",
+  "notes": "Limpieza rutinaria semestral.",
+  "cost": 800
+}
+POST /api/citas
+
+Crear nueva cita.
+
+Request body:
+{
+  "patient": "Maria Garcia Lopez",
+  "doctor": "Dr. Carlos Mendez",
+  "treatment": "Limpieza dental",
+  "date": "2026-02-20",
+  "time": "10:00",
+  "duration": "30 min",
+  "cost": 800,
+  "notes": "Limpieza rutinaria programada."
+}
+
+Response (201):
+{
+  "id": 17,
+  "status": "pendiente",
+  "message": "Cita creada exitosamente"
+}
+PUT /api/citas/:id
+
+Editar una cita existente.
+
+Request body:
+{
+  "patient": "Maria Garcia Lopez",
+  "doctor": "Dr. Carlos Mendez",
+  "treatment": "Limpieza dental",
+  "date": "2026-02-22",
+  "time": "11:00",
+  "duration": "30 min",
+  "cost": 800,
+  "status": "confirmada",
+  "notes": "Reprogramada para el 22."
+}
+
+Response (200):
+{
+  "id": 1,
+  "message": "Cita actualizada exitosamente"
+}
+PATCH /api/citas/:id/estado
+
+Cambiar solo el estado de una cita (confirmar, completar, cancelar).
+
+Request body:
+{
+  "status": "completada"
+}
+
+Response (200):
+{
+  "id": 1,
+  "status": "completada",
+  "message": "Estado actualizado exitosamente"
+}
+4. Historiales Clinicos
+GET /api/historiales
+
+Lista de registros clinicos con filtros.
+
+Query params:
+?search=garcia&doctor=Dr. Carlos Mendez&status=completado&page=1&limit=10
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "patient": "Maria Garcia Lopez",
+      "patientInitials": "MG",
+      "date": "2026-02-12",
+      "doctor": "Dr. Carlos Mendez",
+      "treatment": "Limpieza dental profesional",
+      "diagnosis": "Acumulacion de placa y sarro moderado",
+      "tooth": "General",
+      "notes": "Se realizo limpieza con ultrasonido...",
+      "cost": 800,
+      "status": "completado",
+      "attachments": 2
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 12,
+    "totalPages": 2
+  }
+}
+GET /api/historiales/:id
+
+Detalle de un registro clinico.
+
+Response (200): Mismo formato que un item del listado.
+5. Configuracion
+GET /api/configuracion/clinica
+
+Obtener datos de la clinica.
+
+Response (200):
+{
+  "name": "DentalCare Pro",
+  "rfc": "DCP-210415-AB3",
+  "phone": "+52 55 1234 5678",
+  "email": "contacto@dentalcarepro.com",
+  "website": "www.dentalcarepro.com",
+  "licenseNumber": "LS-2021-CDMX-04521",
+  "address": "Av. Insurgentes Sur 1234, Col. Del Valle...",
+  "specialties": ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"]
+}
+PUT /api/configuracion/clinica
+
+Actualizar datos de la clinica. Request: Mismo formato que el response.
+GET /api/configuracion/facturacion
+
+Response (200):
+{
+  "currency": "mxn",
+  "taxRate": 16,
+  "invoicePrefix": "FAC-2026-",
+  "nextNumber": 422,
+  "autoInvoice": true,
+  "paymentReminder": true,
+  "summary": {
+    "monthlyRevenue": 148520,
+    "pendingBalance": 24300,
+    "overdueInvoices": 8
+  }
+}
+PUT /api/configuracion/facturacion
+
+Request body:
+{
+  "currency": "mxn",
+  "taxRate": 16,
+  "invoicePrefix": "FAC-2026-",
+  "nextNumber": 422,
+  "autoInvoice": true,
+  "paymentReminder": true
+}
+GET /api/configuracion/seguridad
+
+Response (200):
+{
+  "twoFactor": false,
+  "autoLogout": true,
+  "activityLog": true,
+  "dataEncryption": true
+}
+PUT /api/configuracion/seguridad
+
+Request: Mismo formato que el response.
+PUT /api/configuracion/contrasena
+
+Request body:
+{
+  "currentPassword": "********",
+  "newPassword": "********",
+  "confirmPassword": "********"
+}
+
+Response (200):
+{
+  "message": "Contrasena actualizada exitosamente"
+}
+GET /api/configuracion/horario
+
+Obtener configuración de horarios.
+
+Response (200):
+{
+  "appointmentDuration": 30,
+  "timeBetweenAppointments": 15,
+  "maxAppointmentsPerDoctorPerDay": 12,
+  "minAdvanceBookingDays": 1,
+  "workDays": [
+    {
+      "day": "Lunes",
+      "active": true,
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakStart": "13:00",
+      "breakEnd": "14:00"
+    },
+    {
+      "day": "Domingo",
+      "active": false,
+      "startTime": "",
+      "endTime": "",
+      "breakStart": "",
+      "breakEnd": ""
+    }
+  ]
+}
+
+PUT /api/configuracion/horario
+
+Actualizar configuración de horarios.
+
+Request body:
+{
+  "appointmentDuration": 30,
+  "timeBetweenAppointments": 15,
+  "maxAppointmentsPerDoctorPerDay": 12,
+  "minAdvanceBookingDays": 1,
+  "workDays": [
+    {
+      "day": "Lunes",
+      "active": true,
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "breakStart": "13:00",
+      "breakEnd": "14:00"
+    }
+  ]
+}
+
+Response (200):
+{
+  "message": "Configuración de horarios actualizada exitosamente"
+}
+
+GET /api/configuracion/notificaciones
+
+Obtener configuración de notificaciones.
+
+Response (200):
+{
+  "notifications": [
+    {
+      "id": "appointment_confirmation",
+      "name": "Confirmación de cita",
+      "description": "Enviar confirmación automática de cita al paciente",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "reminder_24h",
+      "name": "Recordatorio 24 horas",
+      "description": "Enviar recordatorio 24 horas antes de la cita",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "reminder_2h",
+      "name": "Recordatorio 2 horas",
+      "description": "Enviar recordatorio SMS 2 horas antes",
+      "enabled": false,
+      "type": "sms"
+    },
+    {
+      "id": "cancellation_notice",
+      "name": "Notificación de cancelación",
+      "description": "Notificar cuando se cancela una cita",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "post_treatment_survey",
+      "name": "Encuesta post-tratamiento",
+      "description": "Enviar encuesta después de completar tratamiento",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "birthday_greeting",
+      "name": "Saludo de cumpleaños",
+      "description": "Enviar saludo y ofertas el día del cumpleaños",
+      "enabled": true,
+      "type": "email"
+    },
+    {
+      "id": "patient_reactivation",
+      "name": "Reactivación de paciente",
+      "description": "Enviar email de reactivación a pacientes inactivos",
+      "enabled": false,
+      "type": "email"
+    },
+    {
+      "id": "daily_summary",
+      "name": "Resumen diario",
+      "description": "Enviar resumen diario de citas y actividades",
+      "enabled": true,
+      "type": "email"
+    }
+  ],
+  "emailServer": {
+    "smtpServer": "smtp.gmail.com",
+    "smtpPort": 587,
+    "senderEmail": "notificaciones@dentalcarepro.com",
+    "senderName": "DentalCare Pro",
+    "useSSL": true
+  }
+}
+
+PUT /api/configuracion/notificaciones
+
+Actualizar configuración de notificaciones.
+
+Request body:
+{
+  "notifications": [
+    {
+      "id": "appointment_confirmation",
+      "enabled": true
+    },
+    {
+      "id": "reminder_24h",
+      "enabled": false
+    }
+  ],
+  "emailServer": {
+    "smtpServer": "smtp.gmail.com",
+    "smtpPort": 587,
+    "senderEmail": "notificaciones@dentalcarepro.com",
+    "senderName": "DentalCare Pro",
+    "useSSL": true
+  }
+}
+
+Response (200):
+{
+  "message": "Configuración de notificaciones actualizada exitosamente"
+}
+
+GET /api/configuracion/usuarios
+
+Response (200):
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Admin Principal",
+      "initials": "AP",
+      "email": "admin@dentalcare.com",
+      "role": "Administrador",
+      "lastAccess": "2026-02-13T10:30:00Z"
+    }
+  ]
+}
+POST /api/configuracion/usuarios
+
+Request body:
+{
+  "name": "Nuevo Usuario",
+  "email": "nuevo@dentalcare.com",
+  "role": "Recepcionista",
+  "password": "********"
+}
+DELETE /api/configuracion/usuarios/:id
+
+Response (200):
+{
+  "message": "Usuario eliminado exitosamente"
+}
+6. Dashboard (Panel Principal)
+GET /api/dashboard/stats
+
+Estadisticas generales para el panel principal.
+
+Response (200):
+{
+  "todayAppointments": 24,
+  "activePatients": 1284,
+  "monthlyRevenue": 48520,
+  "returnRate": 89,
+  "weeklyChart": {
+    "labels": ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab"],
+    "scheduled": [22, 18, 24, 20, 19, 12],
+    "completed": [20, 16, 22, 18, 17, 11]
+  },
+  "recentActivity": [
+    {
+      "type": "appointment",
+      "message": "Nueva cita programada para Maria Garcia",
+      "time": "Hace 5 min"
+    }
+  ]
+}
+Resumen de Rutas
+Metodo	Path	Descripcion
+GET	/api/dashboard/stats	Estadisticas del panel
+GET	/api/pacientes	Listar pacientes
+POST	/api/pacientes	Crear paciente
+GET	/api/pacientes/:id	Detalle paciente + odontograma
+PUT	/api/pacientes/:id	Actualizar paciente
+POST	/api/pacientes/:id/dientes/:toothNumber/registros	Agregar registro dental
+GET	/api/doctores	Listar doctores
+GET	/api/doctores/:id	Detalle doctor
+PUT	/api/doctores/:id/horario	Actualizar horario
+GET	/api/citas	Listar citas
+POST	/api/citas	Crear cita
+GET	/api/citas/:id	Detalle cita
+PUT	/api/citas/:id	Editar cita
+PATCH	/api/citas/:id/estado	Cambiar estado cita
+GET	/api/historiales	Listar historiales
+GET	/api/historiales/:id	Detalle historial
+GET	/api/configuracion/clinica	Datos clinica
+PUT	/api/configuracion/clinica	Actualizar clinica
+GET	/api/configuracion/facturacion	Config facturacion
+PUT	/api/configuracion/facturacion	Actualizar facturacion
+GET	/api/configuracion/seguridad	Config seguridad
+PUT	/api/configuracion/seguridad	Actualizar seguridad
+PUT	/api/configuracion/contrasena	Cambiar contrasena
+GET	/api/configuracion/horario	Config horarios
+PUT	/api/configuracion/horario	Actualizar horarios
+GET	/api/configuracion/notificaciones	Config notificaciones
+PUT	/api/configuracion/notificaciones	Actualizar notificaciones
+GET	/api/configuracion/usuarios	Listar usuarios
+POST	/api/configuracion/usuarios	Crear usuario
+DELETE	/api/configuracion/usuarios/:id	Eliminar usuario
+
+Son 31 endpoints en total que cubren todas las funcionalidades actuales de la app. Todos los costos se manejan como numeros enteros (centavos o pesos), las fechas en formato ISO YYYY-MM-DD, y los errores siguen el formato { "error": "mensaje", "code": "ERROR_CODE" } con los HTTP status codes apropiados (400, 404, 500).

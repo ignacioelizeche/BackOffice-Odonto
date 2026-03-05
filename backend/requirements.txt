@@ -1,0 +1,38 @@
+# Backend Dependencies for BackOffice Odonto API
+# Updated for Python 3.14 compatibility
+
+# Web Framework
+fastapi>=0.104.1,<1.0.0
+uvicorn[standard]>=0.24.0
+
+# Database
+sqlalchemy>=2.0.23,<3.0.0
+psycopg[binary]>=3.1.0
+alembic>=1.12.1
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+slowapi>=0.1.9
+werkzeug>=3.0.0
+
+# Data Validation
+pydantic>=2.6.0,<3.0.0
+pydantic-settings>=2.1.0
+email-validator>=2.1.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Utilities
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Development
+pytest>=7.4.3
+pytest-cov>=4.1.0
+httpx>=0.25.2
+
+# Production Server
+gunicorn>=21.2.0

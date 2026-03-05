@@ -1,0 +1,79 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+      group_wait: 0s
+      repeat_interval: 1h
+
+    # Warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning'
+      group_wait: 30s
+      repeat_interval: 4h
+
+    # API alerts
+    - match:
+        service: backend
+      receiver: 'backend-team'
+      continue: true
+
+    # System alerts
+    - match:
+        service: system
+      receiver: 'ops-team'
+      continue: true
+
+receivers:
+  - name: 'default'
+    # Puedes agregar integraciones aquí
+    # - slack_configs, email_configs, webhook_configs, etc.
+
+  - name: 'critical'
+    # Slack webhook para alertas críticas
+    # slack_configs:
+    #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+    #     channel: '#critical-alerts'
+    #     title: 'Critical Alert'
+    #     text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+
+  - name: 'warning'
+    # Email para alerts de warning
+    # email_configs:
+    #   - to: 'ops@yourdomain.com'
+    #     from: 'alertmanager@yourdomain.com'
+    #     smarthost: 'smtp.gmail.com:587'
+    #     auth_username: 'your-email@gmail.com'
+    #     auth_password: 'your-app-password'
+
+  - name: 'backend-team'
+    # Webhook para notificaciones al equipo de backend
+    # webhook_configs:
+    #   - url: 'http://webhook-receiver:5000/alerts'
+    #     send_resolved: true
+
+  - name: 'ops-team'
+    # Webhook para notificaciones al equipo de operaciones
+    # webhook_configs:
+    #   - url: 'http://webhook-receiver:5000/system-alerts'
+    #     send_resolved: true
+
+inhibit_rules:
+  # No enviar alertas de warning si ya hay una critical
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
