@@ -67,7 +67,7 @@ class Empresa(Base):
     phone = Column(String(20), nullable=True)
     email = Column(String(255), nullable=True)
     website = Column(String(255), nullable=True)
-    licenseNumber = Column(String(255), unique=True, nullable=True)
+    license_number = Column("license_number", String(255), unique=True, nullable=True)
     address = Column(Text, nullable=True)
     specialties = Column(JSON, default=[])  # Array of specialties
     status = Column(String(50), default="activa")  # activa, inactiva, suspendida
@@ -96,11 +96,11 @@ class Paciente(Base):
     phone = Column(String(20))
     age = Column(Integer)
     gender = Column(Enum(GenderEnum))
-    lastVisit = Column(String(10))  # YYYY-MM-DD
-    nextAppt = Column(String(10), nullable=True)  # YYYY-MM-DD
+    last_visit = Column("last_visit", String(10))  # YYYY-MM-DD
+    next_appt = Column("next_appt", String(10), nullable=True)  # YYYY-MM-DD
     doctor = Column(String(255))
     status = Column(Enum(PatientStatusEnum), default=PatientStatusEnum.nuevo)
-    totalVisits = Column(Integer, default=0)
+    total_visits = Column("total_visits", Integer, default=0)
     balance = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -171,13 +171,13 @@ class Doctor(Base):
     email = Column(String(255), unique=True, index=True)
     phone = Column(String(20))
     specialty = Column(String(255))
-    licenseNumber = Column(String(50), unique=True)
+    license_number = Column("license_number", String(50), unique=True)
     status = Column(Enum(DoctorStatusEnum), default=DoctorStatusEnum.disponible)
-    patientsToday = Column(Integer, default=0)
-    patientsTotal = Column(Integer, default=0)
+    patients_today = Column("patients_today", Integer, default=0)
+    patients_total = Column("patients_total", Integer, default=0)
     rating = Column(Float, default=0.0)
-    reviewCount = Column(Integer, default=0)
-    yearsExperience = Column(Integer)
+    review_count = Column("review_count", Integer, default=0)
+    years_experience = Column("years_experience", Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -196,10 +196,10 @@ class HorarioDoctor(Base):
     doctor_id = Column(Integer, ForeignKey("doctores.id"))
     day = Column(String(20))
     active = Column(Boolean, default=True)
-    startTime = Column(String(5))  # HH:MM
-    endTime = Column(String(5))    # HH:MM
-    breakStart = Column(String(5), nullable=True)  # HH:MM
-    breakEnd = Column(String(5), nullable=True)    # HH:MM
+    start_time = Column("start_time", String(5))  # HH:MM
+    end_time = Column("end_time", String(5))    # HH:MM
+    break_start = Column("break_start", String(5), nullable=True)  # HH:MM
+    break_end = Column("break_end", String(5), nullable=True)    # HH:MM
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -255,7 +255,7 @@ class ConfiguracionClinica(Base):
     phone = Column(String(20))
     email = Column(String(255))
     website = Column(String(255), nullable=True)
-    licenseNumber = Column(String(100))
+    license_number = Column("license_number", String(100))
     address = Column(Text)
     specialties = Column(JSON)  # Array of strings
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
