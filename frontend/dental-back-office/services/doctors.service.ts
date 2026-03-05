@@ -23,6 +23,12 @@ export interface ScheduleSlot {
   status: "ocupado" | "libre" | "descanso"
 }
 
+export interface Appointment {
+  time: string
+  patient: string
+  treatment: string
+}
+
 export interface Doctor {
   id: number
   name: string
@@ -32,12 +38,14 @@ export interface Doctor {
   specialty: string
   licenseNumber: string
   status: "disponible" | "en-consulta" | "no-disponible"
+  color?: string
   patientsToday: number
   patientsTotal: number
   rating: number
   reviewCount: number
   yearsExperience: number
   schedule?: ScheduleSlot[]
+  nextAppointments?: Appointment[]
   workSchedule?: WorkDay[]
   monthlyStats?: {
     completed: number
