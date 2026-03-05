@@ -47,7 +47,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS with proper settings
-_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+_origins_env = os.getenv("CORS_ORIGINS", os.getenv("ALLOWED_ORIGINS", ""))
 if _origins_env:
     cors_origins = [o.strip() for o in _origins_env.split(",") if o.strip()]
 else:
