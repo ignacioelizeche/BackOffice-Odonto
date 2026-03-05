@@ -7,21 +7,22 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY next.config.mjs ./
-COPY postcss.config.js ./
-COPY tailwind.config.js ./
+COPY postcss.config.mjs ./
+COPY tailwind.config.ts ./
 
 # Instalar dependencias
 RUN npm install
 
 # Copiar código fuente completo
 COPY .env* ./
+COPY middleware.ts ./
 COPY lib ./lib
-COPY public ./public
 COPY app ./app
 COPY components ./components
 COPY contexts ./contexts
 COPY services ./services
 COPY styles ./styles
+COPY hooks ./hooks
 
 # Build
 RUN npm run build
@@ -37,7 +38,6 @@ RUN npm install --omit=dev && npm cache clean --force
 
 # Copiar resultados del build
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 
 # Copiar configuraciones necesarias para el runtime
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
