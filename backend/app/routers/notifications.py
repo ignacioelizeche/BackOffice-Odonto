@@ -16,6 +16,32 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/notificaciones", tags=["Notificaciones"])
 
 
+# CORS preflight handlers for all notificaciones endpoints
+@router.options("")
+def options_notifications():
+    """Handle CORS preflight for notifications list"""
+    return {}
+
+
+@router.options("/{notification_id}")
+def options_notification_detail(notification_id: int):
+    """Handle CORS preflight for notification detail"""
+    return {}
+
+
+@router.options("/{notification_id}/read")
+def options_notification_read(notification_id: int):
+    """Handle CORS preflight for mark as read"""
+    return {}
+
+
+@router.options("/mark-all-read")
+def options_mark_all_read():
+    """Handle CORS preflight for mark all as read"""
+    return {}
+
+
+
 @router.get("", response_model=NotificacionesListResponse)
 def get_notifications(
     limit: int = Query(10, ge=1, le=100),
