@@ -106,10 +106,12 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
       console.log("[Doctor Detail] Datos actualizados del backend:", updatedDoctor)
 
       // Update local state with fresh data from backend, preserving the color
-      setDoctor({
+      setDoctor((prevDoctor) => ({
         ...updatedDoctor,
-        color: doctor.color, // Preserve the original color
-      })
+        schedule: updatedDoctor.schedule ?? prevDoctor.schedule ?? [],
+        workSchedule: updatedDoctor.workSchedule ?? prevDoctor.workSchedule ?? [],
+        color: prevDoctor.color ?? updatedDoctor.color ?? getDefaultDoctorColor(),
+      }))
 
       // Show success message
       setSaveScheduleSuccess(true)
@@ -148,10 +150,12 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
       console.log("[Doctor Detail] Datos actualizados del backend:", updatedDoctor)
 
       // Update local state with fresh data from backend, preserving the color
-      setDoctor({
+      setDoctor((prevDoctor) => ({
         ...updatedDoctor,
-        color: doctor.color, // Preserve the original color
-      })
+        schedule: updatedDoctor.schedule ?? prevDoctor.schedule ?? [],
+        workSchedule: updatedDoctor.workSchedule ?? prevDoctor.workSchedule ?? [],
+        color: prevDoctor.color ?? updatedDoctor.color ?? getDefaultDoctorColor(),
+      }))
 
       // Show success message
       setStatusChangeSuccess(true)
