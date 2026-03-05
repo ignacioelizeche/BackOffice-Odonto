@@ -3,7 +3,7 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --frozen-lockfile
+RUN npm install
 
 COPY . .
 RUN npm run build
@@ -15,10 +15,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm ci --frozen-lockfile --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 EXPOSE 3000
 
