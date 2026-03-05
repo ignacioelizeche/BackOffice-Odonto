@@ -51,10 +51,10 @@ services:
       context: ./frontend/dental-back-office
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012/api}
     container_name: backoffice_frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012/api}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "40013:3000"
