@@ -22,10 +22,10 @@ import {
   Check,
   Loader2,
 } from "lucide-react"
-import type { Doctor, WorkDay } from "./doctors-data"
+import type { WorkDay } from "./doctors-data"
 import { cn } from "@/lib/utils"
 import { WorkScheduleEditor } from "./work-schedule-editor"
-import { doctorsService } from "@/services/doctors.service"
+import { doctorsService, type Doctor } from "@/services/doctors.service"
 import { useAuth } from "@/contexts/auth-context"
 import {
   Select,
