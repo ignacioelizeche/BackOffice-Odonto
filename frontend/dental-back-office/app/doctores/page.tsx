@@ -73,7 +73,7 @@ export default function DoctoresPage() {
           </Button>
         </div>
         <DoctorDetailView
-          doctor={doctorData}
+          doctor={{...doctorData, schedule: doctorData.schedule || []}}
           onBack={() => router.back()}
         />
       </DashboardShell>
