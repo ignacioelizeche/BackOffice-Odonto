@@ -2,10 +2,18 @@
 Configuration router - Endpoints for clinic configuration
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+import os
+import uuid
+import mimetypes
+from werkzeug.utils import secure_filename
+from PIL import Image
+from io import BytesIO
+from app.config import settings
 from app.database import get_db
 from app.models import (
     ConfiguracionClinica, ConfiguracionHorario, ConfiguracionSeguridad,
@@ -19,6 +27,12 @@ from app.schemas import (
     UserCreateResponse, UserUpdate, UserUpdateResponse, UserDeleteResponse
 )
 from app.auth import get_current_user, hash_password, verify_password, require_role
+
+# Allowed extensions for logo upload
+ALLOWED_LOGO_TYPES = {"image/png", "image/jpeg", "image/jpg"}
+# Max logo dimensions (will be resized if larger)
+MAX_LOGO_WIDTH = 500
+MAX_LOGO_HEIGHT = 500
 
 router = APIRouter(prefix="/configuracion", tags=["Configuración"])
 
@@ -57,6 +71,17 @@ def options_users():
 def options_user_detail(user_id: int):
     """Handle CORS preflight for user detail"""
     return {}
+
+@router.options("/clinica/logo")
+def options_clinic_logo():
+    """Handle CORS preflight for clinic logo upload"""
+    return {}
+
+@router.options("/clinica/logo/{filename}")
+def options_clinic_logo_download(filename: str):
+    """Handle CORS preflight for clinic logo download"""
+    return {}
+
 
 # ============= CLINIC CONFIG =============
 @router.get("/clinica", response_model=ClinicConfigResponse)
@@ -103,7 +128,97 @@ def update_clinic_config(
     db.commit()
     return ConfigResponseMessage()
 
-# ============= SCHEDULE CONFIG =============
+@router.post("/clinica/logo")
+def upload_clinic_logo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role("Administrador"))
+):
+    """Upload clinic logo - Only admins can upload"""
+    # Validate file type
+    if file.content_type not in ALLOWED_LOGO_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipo de archivo no permitido. Use PNG o JPEG"
+        )
+
+    # Validate file size (limit to 5MB for images)
+    max_logo_size = 5 * 1024 * 1024  # 5MB
+    if file.size and file.size > max_logo_size:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Tamaño de archivo muy grande (máximo 5MB)"
+        )
+
+    # Create uploads directory if it doesn't exist
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
+    try:
+        # Read and validate image
+        file_content = file.file.read()
+        img = Image.open(BytesIO(file_content))
+
+        # Validate image dimensions - if too large, resize maintaining aspect ratio
+        if img.width > MAX_LOGO_WIDTH or img.height > MAX_LOGO_HEIGHT:
+            img.thumbnail((MAX_LOGO_WIDTH, MAX_LOGO_HEIGHT), Image.Resampling.LANCZOS)
+
+        # Convert to RGB if needed (for JPEG compatibility)
+        if img.mode in ("RGBA", "LA", "P"):
+            rgb_img = Image.new("RGB", img.size, (255, 255, 255))
+            rgb_img.paste(img, mask=img.split()[-1] if img.mode == "RGBA" else None)
+            img = rgb_img
+
+        # Get file extension
+        ext = ".jpg" if img.format and img.format in ("JPEG", "JPG") else ".png"
+
+        # Generate UUID-based filename
+        stored_filename = f"logo_clinica_{current_user.empresa_id}_{uuid.uuid4().hex}{ext}"
+        file_path = os.path.join(settings.UPLOAD_DIR, stored_filename)
+
+        # Save optimized image
+        img.save(file_path, quality=85, optimize=True)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al procesar la imagen: {str(e)}"
+        )
+
+    # Update clinic config with logo URL
+    config = db.query(ConfiguracionClinica).filter(
+        ConfiguracionClinica.empresa_id == current_user.empresa_id
+    ).first()
+
+    if not config:
+        config = ConfiguracionClinica(empresa_id=current_user.empresa_id)
+        db.add(config)
+
+    # Generate download URL
+    logo_url = f"/api/configuracion/clinica/logo/{stored_filename}"
+    config.logo_url = logo_url
+
+    db.commit()
+
+    return {
+        "message": "Logo subido exitosamente",
+        "logoUrl": logo_url
+    }
+
+@router.get("/clinica/logo/{filename}")
+def download_clinic_logo(filename: str):
+    """Download clinic logo"""
+    # Security: ensure filename is safe
+    safe_filename = secure_filename(filename)
+    file_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Logo no encontrado"
+        )
+
+    return FileResponse(file_path, media_type="image/png")
+
 @router.get("/horario", response_model=ScheduleConfigResponse)
 def get_schedule_config(
     db: Session = Depends(get_db),

@@ -170,16 +170,16 @@ class DoctorResponse(BaseModel):
     email: str
     phone: str
     specialty: str
-    licenseNumber: str
+    licenseNumber: str = Field(alias="license_number")
     status: DoctorStatus
-    patientsToday: int
-    patientsTotal: int
+    patientsToday: int = Field(alias="patients_today")
+    patientsTotal: int = Field(alias="patients_total")
     rating: float
-    reviewCount: int
-    yearsExperience: int
+    reviewCount: int = Field(alias="review_count")
+    yearsExperience: int = Field(alias="years_experience")
     schedule: Optional[List[ScheduleSlot]] = None
-    workSchedule: Optional[List[WorkDayBase]] = None
-    monthlyStats: Optional[dict] = None
+    workSchedule: Optional[List[WorkDayBase]] = Field(None, alias="work_schedule")
+    monthlyStats: Optional[dict] = Field(None, alias="monthly_stats")
     empresa_id: Optional[int] = None
 
     class Config:
@@ -365,12 +365,14 @@ class ClinicConfigResponse(BaseModel):
     phone: str
     email: str
     website: Optional[str] = None
-    licenseNumber: str
+    licenseNumber: str = Field(alias="license_number")
     address: str
     specialties: List[str]
+    logoUrl: Optional[str] = Field(None, alias="logo_url")
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 class ClinicConfigUpdate(BaseModel):
     name: Optional[str] = None
@@ -378,9 +380,13 @@ class ClinicConfigUpdate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     website: Optional[str] = None
-    licenseNumber: Optional[str] = None
+    licenseNumber: Optional[str] = Field(None, alias="license_number")
     address: Optional[str] = None
     specialties: Optional[List[str]] = None
+    logoUrl: Optional[str] = Field(None, alias="logo_url")
+
+    class Config:
+        populate_by_name = True
 
 class ConfigResponseMessage(BaseModel):
     message: str = "Configuración actualizada exitosamente"

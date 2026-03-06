@@ -13,9 +13,11 @@ import {
   Stethoscope,
   Bell,
 } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+import { configService } from "@/services/config.service"
 
 // Navigation items available to all users
 const commonNavItems = [
@@ -42,6 +44,23 @@ export function SidebarNav() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
+  const [clinicConfig, setClinicConfig] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadClinicConfig = async () => {
+      try {
+        const config = await configService.getClinicConfig()
+        setClinicConfig(config)
+      } catch (error) {
+        console.error("Error loading clinic config:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadClinicConfig()
+  }, [])
 
   // Select navigation items based on user role
   const navItems = user?.role === "Doctor" ? doctorNavItems : adminNavItems
@@ -57,15 +76,28 @@ export function SidebarNav() {
     .join("")
     .toUpperCase() || "U"
 
+  const clinicName = clinicConfig?.name || "Clínica Dental"
+  const clinicLogoUrl = clinicConfig?.logoUrl
+
   return (
     <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground">
+      {/* Clinic Logo and Name Section */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-          <Stethoscope className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary overflow-hidden">
+          {clinicLogoUrl && !loading ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={clinicLogoUrl}
+              alt="Clinic Logo"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Stethoscope className="h-6 w-6 text-primary-foreground" />
+          )}
         </div>
-        <div>
-          <h1 className="text-sm font-bold text-sidebar-foreground">AgilDent</h1>
-          <p className="text-xs text-sidebar-foreground/60">Desarrollo</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-sm font-bold text-sidebar-foreground truncate">{clinicName}</h1>
+          <p className="text-xs text-sidebar-foreground/60">{user?.name || "Usuario"}</p>
         </div>
       </div>
 
@@ -97,20 +129,21 @@ export function SidebarNav() {
         </ul>
       </nav>
 
+      {/* User Menu Section */}
       <div className="border-t border-sidebar-border px-3 py-4">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 flex-shrink-0">
             <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-xs font-semibold">
               {userInitials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground">{user?.name || "Usuario"}</p>
-            <p className="text-xs text-sidebar-foreground/50">{user?.email || "email@example.com"}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || "Usuario"}</p>
+            <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email || "email@example.com"}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+            className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors flex-shrink-0"
             aria-label="Cerrar sesión"
           >
             <LogOut className="h-4 w-4" />

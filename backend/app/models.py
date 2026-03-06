@@ -258,6 +258,7 @@ class ConfiguracionClinica(Base):
     license_number = Column("licenseNumber", String(100))
     address = Column(Text)
     specialties = Column(JSON)  # Array of strings
+    logo_url = Column(String(500), nullable=True)  # URL del logo
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class ConfiguracionHorario(Base):
