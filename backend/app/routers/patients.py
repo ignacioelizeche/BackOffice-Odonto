@@ -89,9 +89,11 @@ def list_patients(
             query = query.filter(Paciente.doctor == doctor_record.name)
 
     if search:
+        search_filters = [Paciente.name.ilike(f"%{search}%")]
+        # Only search by email if email is not null
+        search_filters.append(Paciente.email.ilike(f"%{search}%"))
         query = query.filter(
-            (Paciente.name.ilike(f"%{search}%")) |
-            (Paciente.email.ilike(f"%{search}%"))
+            (search_filters[0]) | (search_filters[1])
         )
 
     if status:
@@ -125,17 +127,30 @@ def create_patient(
     Create a new patient - Filtered by empresa_id
     If user is a Doctor, patient must be assigned to them
     """
-    # Check if email already exists within the same enterprise
-    existing = db.query(Paciente).filter(
-        (Paciente.email == patient.email) &
-        (Paciente.empresa_id == current_user.empresa_id)
-    ).first()
-    if existing:
+    # First, check if there are any doctors in the system for this enterprise
+    doctors_count = db.query(Doctor).filter(
+        Doctor.empresa_id == current_user.empresa_id
+    ).count()
+    
+    if doctors_count == 0:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email ya registrado o datos inválidos",
-            headers={"X-Error-Code": "INVALID_DATA"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tienes que crear un doctor para agregar pacientes",
+            headers={"X-Error-Code": "NO_DOCTORS_AVAILABLE"}
         )
+    
+    # Check if email already exists within the same enterprise (only if email is provided)
+    if patient.email:
+        existing = db.query(Paciente).filter(
+            (Paciente.email == patient.email) &
+            (Paciente.empresa_id == current_user.empresa_id)
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email ya registrado o datos inválidos",
+                headers={"X-Error-Code": "INVALID_DATA"}
+            )
 
     # If user is a doctor, force the patient to be assigned to them
     doctor_name = patient.doctor

@@ -36,7 +36,7 @@ export interface Patient {
   id: number
   name: string
   initials: string
-  email: string
+  email?: string
   phone: string
   age: number
   gender: "Masculino" | "Femenino"
@@ -62,7 +62,7 @@ export interface PatientListResponse {
 
 export interface CreatePatientDTO {
   name: string
-  email: string
+  email?: string
   phone: string
   age: number
   gender: "Masculino" | "Femenino"

@@ -92,7 +92,7 @@ class Paciente(Base):
     empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=False)
     name = Column(String(255), index=True)
     initials = Column(String(2))
-    email = Column(String(255), unique=True, index=True)
+    email = Column(String(255), nullable=True, index=True)
     phone = Column(String(20))
     age = Column(Integer)
     gender = Column(Enum(GenderEnum))

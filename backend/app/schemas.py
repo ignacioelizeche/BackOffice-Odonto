@@ -78,7 +78,7 @@ class ToothResponse(BaseModel):
 
 class PatientCreate(BaseModel):
     name: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     phone: str
     age: int
     gender: Gender
@@ -97,7 +97,7 @@ class PatientResponse(BaseModel):
     id: int
     name: str
     initials: str
-    email: str
+    email: Optional[str] = None
     phone: str
     age: int
     gender: Gender

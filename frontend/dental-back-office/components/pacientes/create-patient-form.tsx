@@ -26,13 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { patientsService, CreatePatientDTO } from "@/services/patients.service"
+import { doctorsService, Doctor } from "@/services/doctors.service"
 
 // Esquema de validación con Zod
 const createPatientSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(10, "El teléfono debe tener al menos 10 caracteres"),
   age: z.coerce.number().min(1, "Debe ser un número positivo").max(120, "Edad inválida"),
   gender: z.string().min(1, "Seleccione un género"),
@@ -48,17 +51,13 @@ const genders = [
   "Otro",
 ]
 
-const doctors = [
-  "Dr. Carlos Mendez",
-  "Dra. Ana Torres",
-  "Dr. Luis Herrera",
-  "Dra. Elena Rios",
-]
-
 export function CreatePatientForm() {
   const router = useRouter()
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [loadingDoctors, setLoadingDoctors] = useState(true)
+  const [noDoctorsAvailable, setNoDoctorsAvailable] = useState(false)
   const isDoctor = user?.role === "Doctor"
 
   const form = useForm<CreatePatientFormValues>({
@@ -80,6 +79,28 @@ export function CreatePatientForm() {
       form.setValue("doctor", user.name)
     }
   }, [isDoctor, user?.name, form])
+
+  // Load doctors list
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        setLoadingDoctors(true)
+        const response = await doctorsService.getAll()
+        setDoctors(response.data)
+        
+        if (response.data.length === 0) {
+          setNoDoctorsAvailable(true)
+        }
+      } catch (error) {
+        console.error("[Load Doctors] Error loading doctors:", error)
+        toast.error("Error al cargar la lista de doctores")
+      } finally {
+        setLoadingDoctors(false)
+      }
+    }
+
+    loadDoctors()
+  }, [])
 
   async function onSubmit(values: CreatePatientFormValues) {
     setIsSubmitting(true)
@@ -155,6 +176,17 @@ export function CreatePatientForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Alert when no doctors are available */}
+        {noDoctorsAvailable && !isDoctor && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No hay doctores disponibles</AlertTitle>
+            <AlertDescription>
+              Tienes que crear un doctor para agregar pacientes. Por favor, crea un doctor antes de continuar.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Información Personal */}
         <div className="space-y-4">
           <div className="space-y-2">
@@ -187,7 +219,7 @@ export function CreatePatientForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email <span className="text-xs text-muted-foreground">(Opcional)</span></FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="paciente@ejemplo.com" {...field} />
                   </FormControl>
@@ -280,16 +312,16 @@ export function CreatePatientForm() {
                     </div>
                   ) : (
                     // If user is not a doctor, show dropdown
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingDoctors || noDoctorsAvailable}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Seleccione doctor" />
+                          <SelectValue placeholder={loadingDoctors ? "Cargando doctores..." : noDoctorsAvailable ? "No hay doctores disponibles" : "Seleccione doctor"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {doctors.map((doctor) => (
-                          <SelectItem key={doctor} value={doctor}>
-                            {doctor}
+                          <SelectItem key={doctor.id} value={doctor.name}>
+                            {doctor.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -351,7 +383,7 @@ export function CreatePatientForm() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || (noDoctorsAvailable && !isDoctor)}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
