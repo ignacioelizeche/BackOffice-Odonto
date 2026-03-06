@@ -66,7 +66,11 @@ export function ClinicaTab() {
         })
         // Set logo preview if logoUrl exists
         if (data.logoUrl) {
-          setLogoPreview(data.logoUrl)
+          // Build absolute URL if it's a relative path
+          const absoluteUrl = data.logoUrl.startsWith('http')
+            ? data.logoUrl
+            : `${process.env.NEXT_PUBLIC_API_URL || ''}${data.logoUrl}`
+          setLogoPreview(absoluteUrl)
         }
       } catch (error) {
         toast.error("Error al cargar configuración de clínica")
@@ -159,8 +163,11 @@ export function ClinicaTab() {
       toast.success("Logo actualizado exitosamente")
       console.log("Logo URL:", response.logoUrl)
 
-      // Actualizar preview con la URL del servidor
-      setLogoPreview(response.logoUrl)
+      // Actualizar preview con la URL del servidor (construir URL absoluta)
+      const absoluteLogoUrl = response.logoUrl.startsWith('http')
+        ? response.logoUrl
+        : `${process.env.NEXT_PUBLIC_API_URL || ''}${response.logoUrl}`
+      setLogoPreview(absoluteLogoUrl)
 
       // Recargar configuración de clínica para actualizar el logo en todo el sitio
       const updatedConfig = await configService.getClinicConfig()
@@ -177,7 +184,10 @@ export function ClinicaTab() {
 
       // Usar el logoUrl retornado del endpoint en lugar de esperar a refetch
       if (updatedConfig.logoUrl) {
-        setLogoPreview(updatedConfig.logoUrl)
+        const absoluteUrl = updatedConfig.logoUrl.startsWith('http')
+          ? updatedConfig.logoUrl
+          : `${process.env.NEXT_PUBLIC_API_URL || ''}${updatedConfig.logoUrl}`
+        setLogoPreview(absoluteUrl)
       }
 
       // Recargar la página para que el sidebar y otros componentes vean el nuevo logo

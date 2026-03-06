@@ -79,15 +79,22 @@ export function SidebarNav() {
   const clinicName = clinicConfig?.name || "Clínica Dental"
   const clinicLogoUrl = clinicConfig?.logoUrl
 
+  // Build absolute URL for logo if it's a relative path
+  const resolvedLogoUrl = clinicLogoUrl
+    ? clinicLogoUrl.startsWith('http')
+      ? clinicLogoUrl
+      : `${process.env.NEXT_PUBLIC_API_URL || ''}${clinicLogoUrl}`
+    : null
+
   return (
     <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground">
       {/* Clinic Logo and Name Section */}
       <div className="flex items-center gap-3 px-6 py-6">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary overflow-hidden">
-          {clinicLogoUrl && !loading ? (
+          {resolvedLogoUrl && !loading ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={clinicLogoUrl}
+              src={resolvedLogoUrl}
               alt="Clinic Logo"
               className="h-full w-full object-cover"
             />
