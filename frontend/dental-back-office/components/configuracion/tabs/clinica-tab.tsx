@@ -154,6 +154,24 @@ export function ClinicaTab() {
       const response = await configService.uploadClinicLogo(file)
       toast.success("Logo actualizado exitosamente")
       console.log("Logo URL:", response.logoUrl)
+
+      // Recargar configuración de clínica para actualizar el logo en todo el sitio
+      const updatedConfig = await configService.getClinicConfig()
+      form.reset({
+        name: updatedConfig.name,
+        rfc: updatedConfig.rfc,
+        phone: updatedConfig.phone,
+        email: updatedConfig.email,
+        website: updatedConfig.website || "",
+        licenseNumber: updatedConfig.licenseNumber,
+        address: updatedConfig.address,
+        specialties: updatedConfig.specialties || [],
+      })
+
+      // Recargar la página para que el sidebar y otros componentes vean el nuevo logo
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
       toast.error(`Error al subir logo: ${message}`)
