@@ -361,7 +361,7 @@ class ClinicalRecordsListResponse(BaseModel):
 # ============= CONFIGURATION =============
 class ClinicConfigResponse(BaseModel):
     name: str
-    rfc: str
+    rfc: Optional[str] = None
     phone: str
     email: str
     website: Optional[str] = None
