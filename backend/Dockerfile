@@ -4,6 +4,9 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -15,6 +18,14 @@ FROM python:3.11-slim
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install runtime dependencies for Pillow
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libjpeg62-turbo \
+    zlib1g \
+    libpng16-16 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from builder
 COPY --from=builder /root/.local /root/.local
