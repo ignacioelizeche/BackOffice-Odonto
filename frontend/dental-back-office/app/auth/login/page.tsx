@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { authService, type LoginRequest } from '@/services/auth.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -48,8 +49,14 @@ export default function LoginPage() {
       <Card className="w-full max-w-md border-border/50 shadow-lg">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="text-lg font-bold text-primary">🦷</span>
+            <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+              <Image
+                src="/agildent_logo.png"
+                alt="AgilDent Logo"
+                width={64}
+                height={64}
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
           <CardTitle className="text-2xl">AgilDent</CardTitle>

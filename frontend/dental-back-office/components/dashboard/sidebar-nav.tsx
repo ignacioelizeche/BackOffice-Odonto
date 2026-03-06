@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   LayoutDashboard,
   CalendarDays,
@@ -92,7 +93,13 @@ export function SidebarNav() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <Stethoscope className="h-6 w-6 text-primary-foreground" />
+            <Image
+              src="/agildent_logo.png"
+              alt="AgilDent Logo"
+              width={48}
+              height={48}
+              className="h-full w-full object-contain"
+            />
           )}
         </div>
         <div className="flex-1 min-w-0">
