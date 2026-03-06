@@ -365,14 +365,15 @@ class ClinicConfigResponse(BaseModel):
     phone: str
     email: str
     website: Optional[str] = None
-    licenseNumber: Optional[str] = Field(None, alias="license_number")
+    license_number: Optional[str] = Field(None, alias="licenseNumber")
     address: str
     specialties: List[str]
-    logoUrl: Optional[str] = Field(None, alias="logo_url")
+    logo_url: Optional[str] = Field(None, alias="logoUrl")
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = {
+        "from_attributes": True,
+        "populate_by_name": True,
+    }
 
 class ClinicConfigUpdate(BaseModel):
     name: Optional[str] = None

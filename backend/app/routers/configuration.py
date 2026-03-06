@@ -90,38 +90,48 @@ def get_clinic_config(
     current_user = Depends(get_current_user)
 ):
     """Get clinic configuration - All authenticated users can view"""
+    print(f"[GET CLINICA] Requesting config for empresa_id: {current_user.empresa_id}")
+
     config = db.query(ConfiguracionClinica).filter(
         ConfiguracionClinica.empresa_id == current_user.empresa_id
     ).first()
 
-    # Default values for missing fields
-    default_data = {
-        "name": "DentalCare Pro",
-        "rfc": "DCP-210415-AB3",
-        "phone": "+52 55 1234 5678",
-        "email": "contacto@dentalcarepro.com",
-        "website": None,
-        "licenseNumber": "LS-2021-CDMX-04521",
-        "address": "Av. Insurgentes Sur 1234, Col. Del Valle...",
-        "specialties": ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
-        "logoUrl": None
-    }
-
     if not config:
-        return ClinicConfigResponse(**default_data)
+        print(f"[GET CLINICA] No config found, returning defaults")
+        return ClinicConfigResponse(
+            name="DentalCare Pro",
+            rfc="DCP-210415-AB3",
+            phone="+52 55 1234 5678",
+            email="contacto@dentalcarepro.com",
+            website=None,
+            license_number="LS-2021-CDMX-04521",
+            address="Av. Insurgentes Sur 1234, Col. Del Valle...",
+            specialties=["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
+            logo_url=None
+        )
+
+    # Config found - build response
+    print(f"[GET CLINICA] Config found:")
+    print(f"  - name: {config.name}")
+    print(f"  - logo_url: {config.logo_url}")
+    print(f"  - license_number: {config.license_number}")
 
     # Build response with actual config data, using defaults for NULL fields
-    return ClinicConfigResponse(
-        name=config.name or default_data["name"],
-        rfc=config.rfc or default_data["rfc"],
-        phone=config.phone or default_data["phone"],
-        email=config.email or default_data["email"],
+    response = ClinicConfigResponse(
+        name=config.name or "DentalCare Pro",
+        rfc=config.rfc or "DCP-210415-AB3",
+        phone=config.phone or "+52 55 1234 5678",
+        email=config.email or "contacto@dentalcarepro.com",
         website=config.website,
-        licenseNumber=config.license_number or default_data["licenseNumber"],
-        address=config.address or default_data["address"],
-        specialties=config.specialties or default_data["specialties"],
-        logoUrl=config.logo_url
+        license_number=config.license_number or "LS-2021-CDMX-04521",
+        address=config.address or "Av. Insurgentes Sur 1234, Col. Del Valle...",
+        specialties=config.specialties or ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
+        logo_url=config.logo_url
     )
+
+    print(f"[GET CLINICA] Returning response with logo_url: {response.logo_url}")
+
+    return response
 
 @router.put("/clinica", response_model=ConfigResponseMessage)
 def update_clinic_config(
@@ -152,6 +162,8 @@ def upload_clinic_logo(
     current_user = Depends(require_role("Administrador"))
 ):
     """Upload clinic logo - Only admins can upload"""
+    print(f"[LOGO UPLOAD] Starting upload for empresa_id: {current_user.empresa_id}")
+
     # Validate file type - more flexible with MIME types
     content_type = file.content_type.lower() if file.content_type else ""
     if not (content_type.startswith("image/png") or content_type.startswith("image/jpeg") or
@@ -197,8 +209,10 @@ def upload_clinic_logo(
 
         # Save optimized image
         img.save(file_path, quality=85, optimize=True)
+        print(f"[LOGO UPLOAD] Image saved to: {file_path}")
 
     except Exception as e:
+        print(f"[LOGO UPLOAD] Error processing image: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al procesar la imagen: {str(e)}"
@@ -210,14 +224,29 @@ def upload_clinic_logo(
     ).first()
 
     if not config:
+        print(f"[LOGO UPLOAD] Creating new config for empresa_id: {current_user.empresa_id}")
         config = ConfiguracionClinica(empresa_id=current_user.empresa_id)
         db.add(config)
+    else:
+        print(f"[LOGO UPLOAD] Found existing config. Current logo_url: {config.logo_url}")
+        # Delete old logo file if it exists
+        if config.logo_url:
+            old_filename = config.logo_url.split('/')[-1]
+            old_file_path = os.path.join(settings.UPLOAD_DIR, old_filename)
+            try:
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+                    print(f"[LOGO UPLOAD] Deleted old logo: {old_file_path}")
+            except Exception as e:
+                print(f"[LOGO UPLOAD] Warning: Could not delete old logo: {str(e)}")
 
     # Generate download URL
     logo_url = f"/api/configuracion/clinica/logo/{stored_filename}"
     config.logo_url = logo_url
+    print(f"[LOGO UPLOAD] Setting logo_url to: {logo_url}")
 
     db.commit()
+    print(f"[LOGO UPLOAD] Database commit successful")
 
     return {
         "message": "Logo subido exitosamente",
