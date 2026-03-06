@@ -15,7 +15,9 @@ export const clinicConfigSchema = z.object({
     .regex(
       /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/,
       "RFC inválido. Formato: XXX000000XXX"
-    ),
+    )
+    .optional()
+    .or(z.literal("")),
   phone: z
     .string()
     .regex(
@@ -32,7 +34,9 @@ export const clinicConfigSchema = z.object({
     .or(z.literal("")),
   licenseNumber: z
     .string()
-    .min(5, "Número de licencia requerido"),
+    .min(5, "Número de licencia requerido")
+    .optional()
+    .or(z.literal("")),
   address: z
     .string()
     .min(10, "Dirección debe tener al menos 10 caracteres"),
