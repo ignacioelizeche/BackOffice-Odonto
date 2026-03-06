@@ -240,8 +240,8 @@ def upload_clinic_logo(
             except Exception as e:
                 print(f"[LOGO UPLOAD] Warning: Could not delete old logo: {str(e)}")
 
-    # Generate download URL
-    logo_url = f"/api/configuracion/clinica/logo/{stored_filename}"
+    # Generate download URL (sin /api prefix, será agregado por el frontend)
+    logo_url = f"/configuracion/clinica/logo/{stored_filename}"
     config.logo_url = logo_url
     print(f"[LOGO UPLOAD] Setting logo_url to: {logo_url}")
 
