@@ -10,6 +10,9 @@ const _dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
 export const metadata: Metadata = {
   title: 'AgilDent  - Panel de Administracion',
   description: 'Sistema de gestion para clinica dental',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
