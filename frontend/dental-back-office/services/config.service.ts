@@ -18,6 +18,7 @@ export interface ClinicConfig {
   licenseNumber: string
   address: string
   specialties: string[]
+  logoUrl?: string
 }
 
 export interface UpdateClinicDTO {
