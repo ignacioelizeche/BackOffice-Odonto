@@ -32,6 +32,7 @@ RUN npm install --omit=dev && npm cache clean --force
 
 # Copiar resultados del build
 COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 
