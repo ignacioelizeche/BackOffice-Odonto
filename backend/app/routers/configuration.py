@@ -87,9 +87,9 @@ def options_clinic_logo_download(filename: str):
 @router.get("/clinica", response_model=ClinicConfigResponse)
 def get_clinic_config(
     db: Session = Depends(get_db),
-    current_user = Depends(require_role("Administrador"))
+    current_user = Depends(get_current_user)
 ):
-    """Get clinic configuration - Only admins can view"""
+    """Get clinic configuration - All authenticated users can view"""
     config = db.query(ConfiguracionClinica).filter(
         ConfiguracionClinica.empresa_id == current_user.empresa_id
     ).first()
@@ -135,11 +135,14 @@ def upload_clinic_logo(
     current_user = Depends(require_role("Administrador"))
 ):
     """Upload clinic logo - Only admins can upload"""
-    # Validate file type
-    if file.content_type not in ALLOWED_LOGO_TYPES:
+    # Validate file type - more flexible with MIME types
+    content_type = file.content_type.lower() if file.content_type else ""
+    if not (content_type.startswith("image/png") or content_type.startswith("image/jpeg") or
+            content_type.startswith("image/jpg") or content_type.startswith("image/x-png") or
+            content_type.startswith("image/x-jpg")):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Tipo de archivo no permitido. Use PNG o JPEG"
+            detail=f"Tipo de archivo no permitido. Use PNG o JPEG. Recibido: {file.content_type}"
         )
 
     # Validate file size (limit to 5MB for images)
