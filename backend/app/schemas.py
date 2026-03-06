@@ -365,7 +365,7 @@ class ClinicConfigResponse(BaseModel):
     phone: str
     email: str
     website: Optional[str] = None
-    licenseNumber: str = Field(alias="license_number")
+    licenseNumber: Optional[str] = Field(None, alias="license_number")
     address: str
     specialties: List[str]
     logoUrl: Optional[str] = Field(None, alias="logo_url")
