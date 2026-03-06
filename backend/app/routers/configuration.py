@@ -93,18 +93,35 @@ def get_clinic_config(
     config = db.query(ConfiguracionClinica).filter(
         ConfiguracionClinica.empresa_id == current_user.empresa_id
     ).first()
+
+    # Default values for missing fields
+    default_data = {
+        "name": "DentalCare Pro",
+        "rfc": "DCP-210415-AB3",
+        "phone": "+52 55 1234 5678",
+        "email": "contacto@dentalcarepro.com",
+        "website": None,
+        "licenseNumber": "LS-2021-CDMX-04521",
+        "address": "Av. Insurgentes Sur 1234, Col. Del Valle...",
+        "specialties": ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
+        "logoUrl": None
+    }
+
     if not config:
-        # Return default config
-        return ClinicConfigResponse(
-            name="DentalCare Pro",
-            rfc="DCP-210415-AB3",
-            phone="+52 55 1234 5678",
-            email="contacto@dentalcarepro.com",
-            licenseNumber="LS-2021-CDMX-04521",
-            address="Av. Insurgentes Sur 1234, Col. Del Valle...",
-            specialties=["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"]
-        )
-    return ClinicConfigResponse.from_orm(config)
+        return ClinicConfigResponse(**default_data)
+
+    # Build response with actual config data, using defaults for NULL fields
+    return ClinicConfigResponse(
+        name=config.name or default_data["name"],
+        rfc=config.rfc or default_data["rfc"],
+        phone=config.phone or default_data["phone"],
+        email=config.email or default_data["email"],
+        website=config.website,
+        licenseNumber=config.license_number or default_data["licenseNumber"],
+        address=config.address or default_data["address"],
+        specialties=config.specialties or default_data["specialties"],
+        logoUrl=config.logo_url
+    )
 
 @router.put("/clinica", response_model=ConfigResponseMessage)
 def update_clinic_config(

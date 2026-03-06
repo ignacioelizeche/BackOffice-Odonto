@@ -64,6 +64,10 @@ export function ClinicaTab() {
           address: data.address,
           specialties: data.specialties || [],
         })
+        // Set logo preview if logoUrl exists
+        if (data.logoUrl) {
+          setLogoPreview(data.logoUrl)
+        }
       } catch (error) {
         toast.error("Error al cargar configuración de clínica")
         console.error(error)
@@ -155,6 +159,9 @@ export function ClinicaTab() {
       toast.success("Logo actualizado exitosamente")
       console.log("Logo URL:", response.logoUrl)
 
+      // Actualizar preview con la URL del servidor
+      setLogoPreview(response.logoUrl)
+
       // Recargar configuración de clínica para actualizar el logo en todo el sitio
       const updatedConfig = await configService.getClinicConfig()
       form.reset({
@@ -167,6 +174,11 @@ export function ClinicaTab() {
         address: updatedConfig.address,
         specialties: updatedConfig.specialties || [],
       })
+
+      // Usar el logoUrl retornado del endpoint en lugar de esperar a refetch
+      if (updatedConfig.logoUrl) {
+        setLogoPreview(updatedConfig.logoUrl)
+      }
 
       // Recargar la página para que el sidebar y otros componentes vean el nuevo logo
       setTimeout(() => {
