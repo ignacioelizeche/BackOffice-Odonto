@@ -143,7 +143,7 @@ export const apiClient = {
 
         try {
           errorData = await response.json()
-          errorMessage = errorData.message || errorData.error || errorMessage
+          errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
         } catch {
           // Si no se puede parsear JSON, usar el mensaje por defecto
         }
