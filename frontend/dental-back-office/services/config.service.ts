@@ -274,10 +274,7 @@ export const configService = {
   async uploadClinicLogo(file: File): Promise<{ logoUrl: string; message: string }> {
     const formData = new FormData()
     formData.append('file', file)
-    return apiClient.post<{ logoUrl: string; message: string }>('/configuracion/clinica/logo', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    // Don't set Content-Type header - let browser set it automatically with boundary
+    return apiClient.post<{ logoUrl: string; message: string }>('/configuracion/clinica/logo', formData)
   },
 }
