@@ -126,10 +126,12 @@ export function PatientDetailContent({ patient: initialPatient }: PatientDetailC
                   {initialPatient.age} anos - {initialPatient.gender}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5" />
-                    {initialPatient.email}
-                  </span>
+                  {initialPatient.email && (
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5" />
+                      {initialPatient.email}
+                    </span>
+                  )}
                   <span className="flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5" />
                     {initialPatient.phone}

@@ -118,7 +118,7 @@ export function PatientsTable() {
   const filtered = patients.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.email.toLowerCase().includes(search.toLowerCase()) ||
+      (p.email?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       p.doctor.toLowerCase().includes(search.toLowerCase())
     const matchesStatus = statusFilter === "todos" || p.status === statusFilter
     return matchesSearch && matchesStatus
@@ -280,10 +280,12 @@ export function PatientsTable() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex flex-col gap-1">
-                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          {patient.email}
-                        </span>
+                        {patient.email && (
+                          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            {patient.email}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Phone className="h-3 w-3" />
                           {patient.phone}
