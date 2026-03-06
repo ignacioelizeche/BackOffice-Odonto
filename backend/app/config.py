@@ -5,6 +5,7 @@ Configuration module
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+from pathlib import Path
 
 load_dotenv()
 
@@ -42,7 +43,9 @@ class Settings:
 
     # File Upload
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", 10485760))  # 10MB in bytes
-    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
+    # Use absolute path: parent directory of this file (backend/) + uploads
+    _BASE_DIR = Path(__file__).parent.parent  # /app
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", str(_BASE_DIR / "uploads"))
     ALLOWED_EXTENSIONS: list = os.getenv(
         "ALLOWED_EXTENSIONS",
         "pdf,jpg,jpeg,png,doc,docx"

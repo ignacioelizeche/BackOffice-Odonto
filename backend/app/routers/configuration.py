@@ -256,17 +256,25 @@ def upload_clinic_logo(
 @router.get("/clinica/logo/{filename}")
 def download_clinic_logo(filename: str):
     """Download clinic logo"""
+    print(f"[LOGO DOWNLOAD] Requesting file: {filename}")
+    print(f"[LOGO DOWNLOAD] UPLOAD_DIR: {settings.UPLOAD_DIR}")
+
     # Security: ensure filename is safe
     safe_filename = secure_filename(filename)
     file_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
 
+    print(f"[LOGO DOWNLOAD] Full file path: {file_path}")
+    print(f"[LOGO DOWNLOAD] File exists: {os.path.exists(file_path)}")
+
     if not os.path.exists(file_path):
+        print(f"[LOGO DOWNLOAD] File NOT found at: {file_path}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Logo no encontrado"
+            detail=f"Logo no encontrado: {file_path}"
         )
 
-    return FileResponse(file_path, media_type="image/png")
+    print(f"[LOGO DOWNLOAD] File found! Serving: {file_path}")
+    return FileResponse(file_path, media_type="image/jpeg")
 
 @router.get("/horario", response_model=ScheduleConfigResponse)
 def get_schedule_config(
