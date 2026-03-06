@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import {
   LayoutDashboard,
   CalendarDays,
@@ -93,11 +92,10 @@ export function SidebarNav() {
               className="h-full w-full object-cover"
             />
           ) : (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src="/agildent_logo.png"
               alt="AgilDent Logo"
-              width={48}
-              height={48}
               className="h-full w-full object-contain"
             />
           )}
