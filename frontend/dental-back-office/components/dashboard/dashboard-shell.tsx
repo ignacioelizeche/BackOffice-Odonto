@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { Footer } from "@/components/footer"
 import { X } from "lucide-react"
 
 interface DashboardShellProps {
@@ -15,7 +16,7 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <SidebarNav />
@@ -54,6 +55,8 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
             {children}
           </div>
         </main>
+
+        <Footer />
       </div>
     </div>
   )

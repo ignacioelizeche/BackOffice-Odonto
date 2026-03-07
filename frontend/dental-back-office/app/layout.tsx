@@ -3,7 +3,6 @@ import { Inter, DM_Sans } from 'next/font/google'
 
 import './globals.css'
 import { Providers } from './providers'
-import { Footer } from '@/components/footer'
 
 const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const _dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className={`${_inter.variable} ${_dmSans.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <Providers>
           <div className="flex-grow">{children}</div>
-          <Footer />
         </Providers>
       </body>
     </html>
