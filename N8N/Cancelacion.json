@@ -1,0 +1,1507 @@
+{
+  "name": "Cancelacion",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "CallerID"
+            },
+            {
+              "name": "Message"
+            },
+            {
+              "name": "Instance"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        432
+      ],
+      "id": "2f996893-eab1-4e6f-b09f-002c29ee2ce1",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "state",
+        "key": "={{ $json.CallerID }}-state",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        336,
+        96
+      ],
+      "id": "c639573c-9ed2-45fa-b689-730ef5f50d02",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "499e6b74-e44a-478f-9477-599ef97cc445"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inicio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "732a7223-5dba-4eec-a8e4-0a2e6f67de6b",
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "Nombre",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Nombre"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5aaca3f3-7a1f-479e-8396-7f639a6805d0",
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "Eleccion",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Eleccion"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c0def2a0-eb7f-42ef-83b3-1f00a34c233b",
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "Cancelacion",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelacion"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        64
+      ],
+      "id": "7f910543-eb70-4458-b871-b1ee7efa0250",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Nombre"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        -192
+      ],
+      "id": "80c7843e-63e7-41ea-a8d9-e17ee9fb9d26",
+      "name": "Set_name",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=❌ Elegiste *Cancelar una cita*.\n\nPor favor, escribí el *nombre de la persona* que figura en la consulta para poder continuar.\n\nSi deseás volver al menú principal, escribí *CANCELAR*.\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -192
+      ],
+      "id": "98c91f98-28b8-49fc-a1af-cf668b6bd8b6",
+      "name": "Inicio",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=❌ No se encontró ninguna cita asociada a ese nombre.\n\nPor favor, verificá el nombre ingresado e intentá nuevamente.\nSi necesitás ayuda, escribí *CANCELAR* para volver al inicio.\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        96
+      ],
+      "id": "2170fbe8-8f82-43e2-819c-d0a136ee67bd",
+      "name": "No_Date_With_That_Name",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=⚠️ Encontramos una cita asociada a ese nombre, pero el número desde el que estás escribiendo no coincide con el registrado en la reserva.\n\nPor favor, escribí el *número de teléfono* desde el cual se realizó la reserva para poder continuar.\n",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "58a3a7a8-75c2-4557-8d7f-2a48ada289a9",
+      "name": "Number_not_Associated",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Numero"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "e8a434b3-52bb-48e2-b6d3-b288e18c6335",
+      "name": "Set_number",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "wA0dcDuSPu44zLSy",
+          "mode": "list",
+          "cachedResultName": "Appointment",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/wA0dcDuSPu44zLSy"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "paciente_nombre",
+              "condition": "ilike",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.Message.toTitleCase() }}"
+            },
+            {
+              "keyName": "estado",
+              "condition": "neq",
+              "keyValue": "cancelado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        0
+      ],
+      "id": "50b84e07-0a16-4f9a-84f1-66f40979475c",
+      "name": "GetTurnos",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $json.Instance }}",
+        "remoteJid": "={{ $json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        -288
+      ],
+      "id": "d48cd2dd-9e96-4640-9ba6-52f3d9a3a059",
+      "name": "Unica_Cita",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Message_Builder').item.json.CallerID }}-state",
+        "value": "Cancelacion"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -288
+      ],
+      "id": "4f9be4d7-f3c8-4ea2-9383-7b92364cd769",
+      "name": "Set_cancelacion",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6cf103df-c30f-4639-ab1c-a6fdfa1a40ad",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "ea677893-25ac-4f54-92ee-cd215148291a",
+      "name": "Is_name_associated"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eea10787-6084-4c2c-9d6d-dd22fd64d147",
+              "leftValue": "={{ $json.paciente_telefono }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4edf745f-f222-41eb-b37e-a710f5e71b0f",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+              "rightValue": "={{ $json.paciente_telefono}}",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -96
+      ],
+      "id": "90aa22ef-e758-4537-bf93-75f8f3e87cba",
+      "name": "Is_number_associated"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d4b53fe6-2696-4ead-a55d-89f9c36b0bfe",
+              "leftValue": "={{ $json.unica_cita }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1680,
+        -192
+      ],
+      "id": "3fffb4ab-d699-462d-91f5-1706bd01d549",
+      "name": "Is_date_unique"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Message_Builder').item.json.CallerID }}-dateID",
+        "value": "={{ $('Message_Builder').item.json.cita.id.toString() }}",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -288
+      ],
+      "id": "f97a559d-3ee2-4618-a869-a3833aa60437",
+      "name": "Set_DateID",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.Message.toUpperCase() }}",
+                    "rightValue": "SI",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d1cb1abb-bae5-4ffb-8c41-e8f3eebe172f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "db831cfd-f3e0-406c-9ece-dd7856bc1cd1",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.Message.toUpperCase() }}",
+                    "rightValue": "NO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancelado"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        560
+      ],
+      "id": "220e08de-a1d9-4ba0-817a-d2c5c13bff74",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "dateID",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-dateID",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        384
+      ],
+      "id": "bdfa3650-6f5d-43a8-b3f6-2a9df36a6310",
+      "name": "Get_DateID",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=❌ Respuesta inválida. Por favor respondé SI o NO.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        720
+      ],
+      "id": "218c86c2-9d91-4031-a7ed-f9a3d9ff5cf5",
+      "name": "Neither",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=✅ La cita será cancelada.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        384
+      ],
+      "id": "f0822218-7227-4496-9c24-dd5af7cc8274",
+      "name": "Confirmar",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "9npekj3aPag37ifbW5rTQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/9npekj3aPag37ifbW5rTQ",
+          "cachedResultName": "Deletion_of_Redis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CallerID": "={{ $('When Executed by Another Workflow').item.json.CallerID }}"
+          },
+          "matchingColumns": [
+            "CallerID"
+          ],
+          "schema": [
+            {
+              "id": "CallerID",
+              "displayName": "CallerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2096,
+        576
+      ],
+      "id": "4175d4b5-100e-48df-9ea6-ff3cd3dafbb6",
+      "name": "Call 'Deletion_of_Redis'"
+    },
+    {
+      "parameters": {
+        "content": "{CallerID}-state\n{CallerID}-DoctorId\n{CallerID}-fecha\n{CallerID}-fechaHoraInicio\n{CallerID}-fechaHoraFin\n{CallerID}-doctores_disponibles\n{CallerID}-HorariosDisponibles\n{{CallerID }}-menu\n{{ CallerID }}-name",
+        "height": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -512
+      ],
+      "id": "56bf8fce-8ed9-484f-8b55-9fec381037f5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=ℹ️ La cita no fue cancelada.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        576
+      ],
+      "id": "1d391e18-3493-4e47-9b5d-1d81ecf6f7c9",
+      "name": "Cancelar",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Citas existentes\nconst appointments = $('GetTurnos').all().map(i => i.json);\n\n// Fecha actual\nconst ahora = new Date();\n\n// Filtrar citas futuras y reservadas\nconst citasFuturas = appointments.filter(cita => {\n  return (\n    cita.estado === 'reservado' &&\n    new Date(cita.fecha_hora_inicio) > ahora\n  );\n});\n\n// Si no tiene citas futuras\nif (citasFuturas.length === 0) {\n  return [{\n    json: {\n      tiene_citas: false,\n      mensaje: '❌ No tenés citas futuras registradas.'\n    }\n  }];\n}\n\n// Si tiene una sola cita\nif (citasFuturas.length === 1) {\n  const cita = citasFuturas[0];\n  const inicio = new Date(cita.fecha_hora_inicio);\n\n  const mensaje =\n`📅 Tenés una cita programada:\n\n📆 Fecha: ${inicio.toLocaleDateString('es-ES')}\n⏰ Hora: ${inicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}\n\n¿Deseás cancelar esta cita?\nRespondé *SI* para cancelar o *NO* para mantenerla.`;\n\n  return [{\n    json: {\n      unica_cita: true,\n      cita,\n      mensaje,\n      CallerID: $('When Executed by Another Workflow').first().json.CallerID,\n      Instance: $('When Executed by Another Workflow').first().json.Instance\n    }\n  }];\n}\n\n// Si tiene más de una cita\nlet menu = `📅 Tenés las siguientes citas programadas:\\n\\n`;\n\ncitasFuturas.forEach((cita, index) => {\n  const inicio = new Date(cita.fecha_hora_inicio);\n  menu += `${index + 1}️⃣ ${inicio.toLocaleDateString('es-ES')} - ${inicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}\\n`;\n});\n\nmenu += `\\nPor favor, respondé con el *número* de la cita que deseás cancelar.`;\n\nreturn [{\n  json: {\n    unica_cita: false,\n    citas: citasFuturas,\n    mensaje: menu,\n      CallerID: $('When Executed by Another Workflow').first().json.CallerID,\n      Instance: $('When Executed by Another Workflow').first().json.Instance\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -192
+      ],
+      "id": "8aa0d1a9-b7e8-44c2-bbbd-cc910e73e4ba",
+      "name": "Message_Builder"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $json.Instance }}",
+        "remoteJid": "={{ $json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        -96
+      ],
+      "id": "948eb867-17f9-41bb-9bd8-41553dc6d5e7",
+      "name": "Multiples_Citas",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Message_Builder').item.json.CallerID }}-HorariosDisponibles",
+        "value": "={{ $('Message_Builder').item.json.citas.toJsonString() }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -96
+      ],
+      "id": "92378e25-cbf7-4637-b13e-3a7412c3d1e1",
+      "name": "Set_HorariosDisponibles",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Message_Builder').item.json.CallerID }}-state",
+        "value": "Eleccion"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -96
+      ],
+      "id": "a6d84f0a-514d-4c1c-ba34-8ee39bfe3867",
+      "name": "Set_eleccion",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "citas",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-HorariosDisponibles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        784,
+        192
+      ],
+      "id": "3e94ffa8-1544-4e32-b57d-378b400eab7c",
+      "name": "Get_HorariosDisponibles",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// JSON en formato string (array de citas)\nconst jsonString = $input.first().json.citas;\n\n// Opción ingresada por el usuario\nconst opcionRaw = $('When Executed by Another Workflow').first().json.Message;\nconst opcion = parseInt(opcionRaw, 10);\n\n// Parsear JSON string a JSON real\nconst citas = JSON.parse(jsonString);\n\n// Validar que sea número\nif (isNaN(opcion)) {\n  return [{\n    json: {\n      valido: false,\n      mensaje: '❌ Opción inválida. Por favor, respondé con un número.'\n    }\n  }];\n}\n\n// Validar rango\nif (opcion < 1 || opcion > citas.length) {\n  return [{\n    json: {\n      valido: false,\n      mensaje: '❌ El número ingresado no corresponde a ninguna cita.'\n    }\n  }];\n}\n\n// Obtener la cita seleccionada (1 → índice 0)\nconst citaSeleccionada = citas[opcion - 1];\n\n// Fecha de inicio de la cita\nconst inicio = new Date(citaSeleccionada.fecha_hora_inicio);\n\n// Mensaje de confirmación\nconst mensaje =\n`📆 Fecha: ${inicio.toLocaleDateString('es-ES')}\n⏰ Hora: ${inicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}\n\n¿Deseás cancelar esta cita?\nRespondé *SI* para cancelar o *NO* para mantenerla.`;\n\n// OK\nreturn [{\n  json: {\n    valido: true,\n    eleccion_usuario: opcion,\n    cita_seleccionada: citaSeleccionada,\n    mensaje\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        192
+      ],
+      "id": "764c296d-8ed8-4f36-ac38-0b9411e03a47",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4c55dea2-9a0c-4719-97cf-03f33cc4712c",
+              "leftValue": "={{ $json.Message.toUpperCase() }}",
+              "rightValue": "CANCELAR",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        112,
+        432
+      ],
+      "id": "e88b18fe-7094-4902-8c36-c2eeb9f0bb1d",
+      "name": "Canceled?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ddc0e4cb-e3b1-4c3c-99d8-3a773a2db127",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        240
+      ],
+      "id": "4749e92e-c12d-4883-9158-a518b2a98c53",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        176
+      ],
+      "id": "a71ce235-fb29-4eb5-b7cc-e581c8cf69e5",
+      "name": "Eleccion_valida",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Cancelacion"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        144
+      ],
+      "id": "2d6b80ec-0d7e-4099-bb3b-6d32df8fb3b2",
+      "name": "Set_cancelacion1",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-dateID",
+        "value": "={{ $('Code in JavaScript').item.json.cita_seleccionada.id.toString() }}",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        144
+      ],
+      "id": "6db88d78-49d8-492a-b233-8b0f22e5b027",
+      "name": "Set_DateID1",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.calendar_id }}",
+          "mode": "id"
+        },
+        "eventId": "={{ $('Update Date State').item.json.calendar_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1648,
+        384
+      ],
+      "id": "3bd31018-4933-4c44-aae3-938812524dc6",
+      "name": "Delete an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "nsnIVzGtKgqXNO3s",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "hMRPl1eK7rwrIssD",
+          "mode": "list",
+          "cachedResultName": "Doctor",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/hMRPl1eK7rwrIssD"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $json.doctor_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        384
+      ],
+      "id": "40df47f3-f015-43df-8026-8c66135460ee",
+      "name": "Get_calendar"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "wA0dcDuSPu44zLSy",
+          "mode": "list",
+          "cachedResultName": "Appointment",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/wA0dcDuSPu44zLSy"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $json.dateID }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "estado": "cancelado",
+            "origen": "Whatsapp"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "doctor_id",
+              "displayName": "doctor_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "paciente_nombre",
+              "displayName": "paciente_nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "paciente_telefono",
+              "displayName": "paciente_telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "fecha_hora_inicio",
+              "displayName": "fecha_hora_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "fecha_hora_fin",
+              "displayName": "fecha_hora_fin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "origen",
+              "displayName": "origen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        384
+      ],
+      "id": "af694f40-2e18-430a-830f-6c797c962e91",
+      "name": "Update Date State"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "CallerID": "595981145720@s.whatsapp.net",
+          "Message": "si",
+          "Instance": "IgnacioElizeche"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Canceled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Inicio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GetTurnos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get_HorariosDisponibles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inicio": {
+      "main": [
+        [
+          {
+            "node": "Set_name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Number_not_Associated": {
+      "main": [
+        [
+          {
+            "node": "Set_number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetTurnos": {
+      "main": [
+        [
+          {
+            "node": "Is_name_associated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unica_Cita": {
+      "main": [
+        [
+          {
+            "node": "Set_cancelacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_cancelacion": {
+      "main": [
+        [
+          {
+            "node": "Set_DateID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_name_associated": {
+      "main": [
+        [
+          {
+            "node": "Is_number_associated",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No_Date_With_That_Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_number_associated": {
+      "main": [
+        [
+          {
+            "node": "Message_Builder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Number_not_Associated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_date_unique": {
+      "main": [
+        [
+          {
+            "node": "Unica_Cita",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Multiples_Citas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Get_DateID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Neither",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_DateID": {
+      "main": [
+        [
+          {
+            "node": "Update Date State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Call 'Deletion_of_Redis'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Call 'Deletion_of_Redis'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message_Builder": {
+      "main": [
+        [
+          {
+            "node": "Is_date_unique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Multiples_Citas": {
+      "main": [
+        [
+          {
+            "node": "Set_eleccion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_eleccion": {
+      "main": [
+        [
+          {
+            "node": "Set_HorariosDisponibles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_HorariosDisponibles": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Canceled?": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Deletion_of_Redis'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Eleccion_valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_cancelacion1": {
+      "main": [
+        [
+          {
+            "node": "Set_DateID1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eleccion_valida": {
+      "main": [
+        [
+          {
+            "node": "Set_cancelacion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "main": [
+        [
+          {
+            "node": "Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_calendar": {
+      "main": [
+        [
+          {
+            "node": "Delete an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Date State": {
+      "main": [
+        [
+          {
+            "node": "Get_calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "38c430d6-540b-4228-b33e-d69526f9301e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3212bfadbae0394348d980ce598dea4cda92f75a33d564a77df9f78616c9dc82"
+  },
+  "id": "d2t3ngA1zVLviUwsX4UrY",
+  "tags": []
+}

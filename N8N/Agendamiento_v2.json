@@ -1,0 +1,458 @@
+{
+  "name": "Agendamiento_v2",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "CallerID"
+            },
+            {
+              "name": "Message"
+            },
+            {
+              "name": "Instance"
+            },
+            {
+              "name": "EmpresaID"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -100,
+        300
+      ],
+      "id": "workflow_trigger",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "state",
+        "key": "={{ $json.CallerID }}-state",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        150,
+        200
+      ],
+      "id": "get_state_redis",
+      "name": "Get State from Redis",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.33:8000/api/whatsapp-flow/doctors",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "empresa_id",
+              "value": "={{ $json.EmpresaID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        400,
+        100
+      ],
+      "id": "get_doctors",
+      "name": "Get Doctors from Backend"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "",
+                    "operator": {
+                      "name": "filter.operator.empty",
+                      "type": "string",
+                      "operation": "empty"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": false,
+              "output": "AGENDAMIENTO_DOCTOR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "AGENDAMIENTO_DOCTOR",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": false,
+              "output": "AGENDAMIENTO_DATE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "AGENDAMIENTO_DATE",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": false,
+              "output": "AGENDAMIENTO_TIME"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "AGENDAMIENTO_TIME",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": false,
+              "output": "AGENDAMIENTO_CONFIRMATION"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        600,
+        200
+      ],
+      "id": "switch_state",
+      "name": "Route by State"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.33:8000/api/whatsapp-flow/available-dates",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "empresa_id",
+              "value": "={{ $json.EmpresaID }}"
+            },
+            {
+              "name": "doctor_id",
+              "value": "={{ $json.doctor_selected }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        50
+      ],
+      "id": "get_dates",
+      "name": "Get Available Dates"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.33:8000/api/whatsapp-flow/available-times",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "empresa_id",
+              "value": "={{ $json.EmpresaID }}"
+            },
+            {
+              "name": "doctor_id",
+              "value": "={{ $json.doctor_selected }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $json.date_selected }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        150
+      ],
+      "id": "get_times",
+      "name": "Get Available Times"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.33:8000/api/whatsapp-flow/create-appointment",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "empresa_id",
+              "value": "={{ $json.EmpresaID }}"
+            },
+            {
+              "name": "caller_id",
+              "value": "={{ $json.CallerID }}"
+            },
+            {
+              "name": "doctor_id",
+              "value": "={{ $json.doctor_selected }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $json.date_selected }}"
+            },
+            {
+              "name": "time",
+              "value": "={{ $json.time_selected }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        250
+      ],
+      "id": "create_appointment",
+      "name": "Create Appointment in Backend"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.33:30110/message/sendText/default",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.CallerID }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.response_message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1100,
+        200
+      ],
+      "id": "send_whatsapp",
+      "name": "Send WhatsApp Response"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "propertyName": "state",
+        "key": "={{ $json.CallerID }}-state",
+        "value": "AGENDAMIENTO_DOCTOR",
+        "ttl": 86400,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        700,
+        500
+      ],
+      "id": "update_redis_state",
+      "name": "Update State in Redis"
+    }
+  ],
+  "connections": {
+    "workflow_trigger": {
+      "main": [
+        [
+          {
+            "node": "get_state_redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_state_redis": {
+      "main": [
+        [
+          {
+            "node": "switch_state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "switch_state": {
+      "main": [
+        [
+          {
+            "node": "get_doctors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_dates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_times",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_doctors": {
+      "main": [
+        [
+          {
+            "node": "send_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_dates": {
+      "main": [
+        [
+          {
+            "node": "send_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_times": {
+      "main": [
+        [
+          {
+            "node": "send_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_appointment": {
+      "main": [
+        [
+          {
+            "node": "send_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_whatsapp": {
+      "main": [
+        [
+          {
+            "node": "update_redis_state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1a2b3c4d",
+  "meta": {
+    "instanceId": "123456789"
+  },
+  "pinData": null
+}

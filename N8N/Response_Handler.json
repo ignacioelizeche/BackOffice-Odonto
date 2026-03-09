@@ -1,0 +1,1688 @@
+{
+  "name": "Response_Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Reserva-de-turno",
+        "options": {}
+      },
+      "name": "Trigger WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        928
+      ],
+      "id": "3046f6c8-83b4-4f3c-afc6-7838930cefc5",
+      "webhookId": "051bf728-f2c4-4db1-ba49-adaf9bff488a"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Trigger WhatsApp').item.json.body.data.messageType }}",
+                    "rightValue": "=audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "28197557-bc03-4fb9-87fd-46f60a08f0fa"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image message"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "text message"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -688,
+        928
+      ],
+      "id": "4890b6e1-0c80-47c8-955a-964568102711",
+      "name": "Switch",
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -464,
+        560
+      ],
+      "id": "d2993601-8a93-451a-8447-12f9769b9cd4",
+      "name": "Wait",
+      "webhookId": "6e178d1c-9212-41df-8c12-7b850f296deb"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "URL API",
+              "value": "http://192.168.2.33:30110"
+            },
+            {
+              "name": "APIKEY",
+              "value": "A2B6C305543B-4897-98AB-70DCC840BB7E"
+            },
+            {
+              "name": "Nombre de instancia",
+              "value": "={{ $('Trigger WhatsApp').item.json.body.instance }}"
+            },
+            {
+              "name": "Representante",
+              "value": "595981145720@s.whatsapp.net"
+            },
+            {
+              "name": "CallerID",
+              "value": "={{ $('Trigger WhatsApp').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3721b05-1ce6-4169-a851-7b04b2ad2560",
+      "name": "Variables EvolutionAPI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        928
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Variables EvolutionAPI').item.json['URL API'] }}/chat/getBase64FromMediaMessage/{{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Variables EvolutionAPI').item.json.APIKEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"message\": {\n        \"key\": {\n            \"id\": \"{{ $('Trigger WhatsApp').item.json.body.data.key.id }}\"\n        }\n    },\n    \"convertToMp4\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        560
+      ],
+      "id": "56a03584-f953-4db5-a81d-a4e1bb112ffb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "mimeType": "={{ $json.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        560
+      ],
+      "id": "d2a9edd9-4267-444c-a56d-d072b327e72c",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "content": "**Trigger y Clasificación Inicial**:\n\n   - Recibe mensajes de WhatsApp y separa las partes (remitente, ID, timestamp, texto)\n   - Diferencia entre imágenes y texto mediante un switch\n\n",
+        "width": 380,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        304
+      ],
+      "id": "0c330b09-cc42-4f0a-9491-0568edc98dd6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.2.30:30111/transcribe/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "516f0798-c08b-479b-97d3-26e447f0f9d2",
+      "name": "AgilSTT",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        208,
+        560
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6e40f817-747b-4bb5-9762-0af1d198b2ef",
+              "leftValue": "={{ $('Trigger WhatsApp').item.json.body.data.key.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -912,
+        928
+      ],
+      "id": "65ec541d-419f-4e7d-9a1b-e85f0f4bfe7e",
+      "name": "FromMe"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        464
+      ],
+      "id": "6d40ed0c-2b75-4a59-934a-ff7e53043b6e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "Doctor",
+        "columns": {
+          "column": [
+            {
+              "name": "nombre"
+            },
+            {
+              "name": "especialidad"
+            },
+            {
+              "name": "duracion_consulta",
+              "type": "number"
+            },
+            {
+              "name": "zona_horaria",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        -112
+      ],
+      "id": "84d87360-0c6d-4060-be2a-7ec0d8d9c915",
+      "name": "Create doctores table"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "Horario",
+        "columns": {
+          "column": [
+            {
+              "name": "doctor_id",
+              "type": "number"
+            },
+            {
+              "name": "dia_semana",
+              "type": "number"
+            },
+            {
+              "name": "hora_inicio",
+              "type": "number"
+            },
+            {
+              "name": "hora_fin",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -912,
+        -112
+      ],
+      "id": "1a91d021-1f2b-4442-a1c3-84906721f37f",
+      "name": "Create doctores table1"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "Appointment",
+        "columns": {
+          "column": [
+            {
+              "name": "doctor_id",
+              "type": "number"
+            },
+            {
+              "name": "paciente_telefono",
+              "type": "number"
+            },
+            {
+              "name": "fecha_hora_inicio",
+              "type": "date"
+            },
+            {
+              "name": "fecha_hora_fin",
+              "type": "date"
+            },
+            {
+              "name": "estado"
+            },
+            {
+              "name": "origen"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        -112
+      ],
+      "id": "9567d535-4372-4a79-af60-08701b2a26ec",
+      "name": "Create doctores table2"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "hMRPl1eK7rwrIssD",
+          "mode": "list",
+          "cachedResultName": "Doctor",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/hMRPl1eK7rwrIssD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre": "Dr. Luis Martínez",
+            "especialidad": "Prostodoncia",
+            "duracion_consulta": 30,
+            "zona_horaria": -3
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "especialidad",
+              "displayName": "especialidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "duracion_consulta",
+              "displayName": "duracion_consulta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "zona_horaria",
+              "displayName": "zona_horaria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1360,
+        112
+      ],
+      "id": "471cbf20-d1fb-41a9-8364-7f4d6d6da0a6",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Vh1ixrYCpUuuKazI",
+          "mode": "list",
+          "cachedResultName": "Horario",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/Vh1ixrYCpUuuKazI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "hora_inicio": 800,
+            "hora_fin": 1200,
+            "doctor_id": 3,
+            "dia_semana": 2
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "doctor_id",
+              "displayName": "doctor_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "dia_semana",
+              "displayName": "dia_semana",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "hora_inicio",
+              "displayName": "hora_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "hora_fin",
+              "displayName": "hora_fin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        112
+      ],
+      "id": "b1796000-54e4-4e64-86ab-7b171e2addd6",
+      "name": "Insert row1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -464,
+        1120
+      ],
+      "id": "b20da365-2882-488f-b08c-82e29ef2d584",
+      "name": "Wait1",
+      "webhookId": "977ee989-ec8d-444f-b5c0-238b9f1bc561"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "wA0dcDuSPu44zLSy",
+          "mode": "list",
+          "cachedResultName": "Appointment",
+          "cachedResultUrl": "/projects/2FKcChTlWLe9b3wY/datatables/wA0dcDuSPu44zLSy"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "doctor_id": 3,
+            "paciente_telefono": 971340160,
+            "fecha_hora_inicio": "2026-11-24T08:00:00",
+            "fecha_hora_fin": "2026-11-24T08:30:00",
+            "origen": "manual",
+            "estado": "reservada"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "doctor_id",
+              "displayName": "doctor_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "paciente_telefono",
+              "displayName": "paciente_telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fecha_hora_inicio",
+              "displayName": "fecha_hora_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fecha_hora_fin",
+              "displayName": "fecha_hora_fin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "origen",
+              "displayName": "origen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1360,
+        336
+      ],
+      "id": "2f8df0c1-a180-4618-9eed-78a0c5aba239",
+      "name": "Insert row2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CfaIQ42iZbUR2cMj",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/CfaIQ42iZbUR2cMj",
+          "cachedResultName": "Agendamiento"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CallerID": "={{ $('Variables EvolutionAPI').item.json.CallerID }}",
+            "message": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation }}",
+            "Instance": "={{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}"
+          },
+          "matchingColumns": [
+            "CallerID",
+            "",
+            "body_data_message_conversation_firstItem",
+            "CallerID_firstItem",
+            "_firstItem",
+            "body_data_message_conversation_toUpperCase",
+            "CallerID_replaceAll"
+          ],
+          "schema": [
+            {
+              "id": "CallerID",
+              "displayName": "CallerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Instance",
+              "displayName": "Instance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        1136
+      ],
+      "name": "Call Agendamiento",
+      "id": "33f47a9e-ffa4-4a5e-a20b-b911bcd51727"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.menu }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "942b8301-0aee-4f43-ba13-491739503846"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Menu-Inicio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c0687953-eca0-4701-ac3b-ae1543dd3991",
+                    "leftValue": "={{ $json.menu }}",
+                    "rightValue": "User-Selection",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "User-Selection"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "20aab8cc-0f42-48b6-93b6-a3468172a65c",
+                    "leftValue": "={{ $json.menu }}",
+                    "rightValue": "Agendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reserva"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b897da69-0933-4c6d-b225-b0d0421abbf3",
+                    "leftValue": "={{ $json.menu }}",
+                    "rightValue": "Cancelar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7c24ddb2-dd2b-4065-8e9f-9acbd896e006",
+                    "leftValue": "={{ $json.menu }}",
+                    "rightValue": "Reagendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reagendar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        1088
+      ],
+      "id": "3ed4b671-51b9-4235-803c-48277c69a1e3",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}",
+        "remoteJid": "={{ $('Variables EvolutionAPI').item.json.CallerID }}",
+        "messageText": "=👋 ¡Bienvenido!\n\nPor favor, elegí una opción respondiendo con el número correspondiente:\n\n1️⃣ Reservar una cita  \n2️⃣ Cancelar una cita  \n3️⃣ Reagendar una cita  \n4️⃣ Hablar con un representante",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        752
+      ],
+      "id": "f7066a8f-f4b7-48aa-ba6e-7557d6ab6eb3",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Variables EvolutionAPI').item.json.CallerID }}-menu",
+        "value": "User-Selection"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        432,
+        752
+      ],
+      "id": "16698f1d-d0d3-4bc1-94c8-05e2bf47d948",
+      "name": "Set-User-Selection",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "menu",
+        "key": "={{ $json.CallerID }}-menu",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        1120
+      ],
+      "id": "af5578fc-ec3d-4879-9eb9-b4151dc12e00",
+      "name": "get_Menu-State",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b0741b50-0058-4f46-a37a-85ced2e28f15",
+              "leftValue": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation.isNumeric() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        1056
+      ],
+      "id": "b8682b6a-f52f-4fd2-95a6-6501b36cc420",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('FromMe').item.json['Nombre de instancia'] }}",
+        "remoteJid": "={{ $('FromMe').item.json.CallerID }}",
+        "messageText": "=❌ Opción inválida.\n\nPor favor, respondé únicamente con un número del menú para continuar.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        432,
+        1136
+      ],
+      "id": "2eccbeac-3d66-400e-b220-a795874eafe6",
+      "name": "Opcion_Invalida",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4b362150-9cb0-4c41-823e-d0bcf857c0e1",
+              "leftValue": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation.toNumber() }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "2e97d58c-3299-41f9-ae48-3de07b99b718",
+              "leftValue": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation.toNumber() }}",
+              "rightValue": 4,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        944
+      ],
+      "id": "5ac08b24-53cb-4090-9eb9-946a950fb591",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}",
+        "remoteJid": "={{ $('Variables EvolutionAPI').item.json.CallerID }}",
+        "messageText": "=❌ Opción no válida.\n\nEl número ingresado no corresponde a ninguna opción del menú.\nPor favor, elegí un número válido para continuar.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        656,
+        1040
+      ],
+      "id": "e08c0239-d2cd-4d4f-b424-2248ba9d4bab",
+      "name": "Fuera_del_rango",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const opcion = parseInt($('Trigger WhatsApp').first().json.body.data.message.conversation, 10);\n\nlet resultado;\n\nswitch (opcion) {\n  case 1:\n    resultado = \"Agendar\";\n    break;\n  case 2:\n    resultado = \"Cancelar\";\n    break;\n  case 3:\n    resultado = \"Reagendar\";\n    break;\n  case 4:\n    resultado = \"Representante\";\n    break;\n  default:\n    resultado = null;\n}\n\nreturn [{\n  json: {\n    opcion_elegida: resultado\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        848
+      ],
+      "id": "693fa56f-488d-4bca-b197-30b54ddeba2e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Variables EvolutionAPI').item.json.CallerID }}-menu",
+        "value": "={{ $json.opcion_elegida }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        880,
+        848
+      ],
+      "id": "df263030-bbec-4bf1-9a8a-0ba030f66da3",
+      "name": "Set_Menu-State",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.opcion_elegida }}",
+                    "rightValue": "Agendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c3bfd14c-fb64-4edc-9e0f-4063bb31e257"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reserva"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b44c43c5-914a-4485-a2a7-f5af5b157d0a",
+                    "leftValue": "={{ $json.opcion_elegida }}",
+                    "rightValue": "Cancelar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancelacion"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "54ae5bb1-3496-46fb-8add-9bef8fd728cc",
+                    "leftValue": "={{ $json.opcion_elegida }}",
+                    "rightValue": "Reagendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reagendar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        832
+      ],
+      "id": "40b10a7a-c462-472e-b638-11b4a42a84fa",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "d2t3ngA1zVLviUwsX4UrY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/d2t3ngA1zVLviUwsX4UrY",
+          "cachedResultName": "Cancelacion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Instance": "={{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}",
+            "CallerID": "={{ $('Variables EvolutionAPI').item.json.CallerID }}",
+            "Message": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "CallerID",
+              "displayName": "CallerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Instance",
+              "displayName": "Instance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1344
+      ],
+      "id": "ba874699-b10f-4408-9bc5-ebd330c149cd",
+      "name": "Call 'Cancelacion'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "G8EylwTxnY6yVjSi",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/G8EylwTxnY6yVjSi",
+          "cachedResultName": "Reagendamiento"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CallerID": "={{ $('Variables EvolutionAPI').item.json.CallerID }}",
+            "Instance": "={{ $('Variables EvolutionAPI').item.json['Nombre de instancia'] }}",
+            "Message": "={{ $('Trigger WhatsApp').item.json.body.data.message.conversation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "CallerID",
+              "displayName": "CallerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Instance",
+              "displayName": "Instance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        1536
+      ],
+      "id": "b0542840-ed3f-4ad3-a9b0-7563f73ece14",
+      "name": "Call 'Reagendamiento'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/calendar/v3/calendars",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "summary",
+              "value": "Nombre de mi nuevo calendario"
+            },
+            {
+              "name": "description",
+              "value": "Creado desde n8n vía API"
+            },
+            {
+              "name": "timeZone",
+              "value": "Europe/Madrid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -992,
+        464
+      ],
+      "id": "5ad9209a-4f71-4ddc-9598-9a8101ae667b",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "nsnIVzGtKgqXNO3s",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Trigger WhatsApp": [
+      {
+        "json": {
+          "headers": {
+            "x-real-ip": "172.31.2.1",
+            "x-forwarded-for": "172.31.2.1",
+            "x-forwarded-proto": "https",
+            "connection": "âupgradeâ",
+            "host": "192.168.2.33:30109",
+            "content-length": "675",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.13.2",
+            "accept-encoding": "gzip, compress, deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "IgnacioElizeche",
+            "data": {
+              "key": {
+                "remoteJid": "595981145720@s.whatsapp.net",
+                "remoteJidAlt": "107589115347140@lid",
+                "fromMe": true,
+                "id": "3EB093D66039D295285A40",
+                "participant": "",
+                "addressingMode": "pn"
+              },
+              "pushName": "Ignacio Elizeche",
+              "status": "SERVER_ACK",
+              "message": {
+                "conversation": "2"
+              },
+              "messageType": "conversation",
+              "messageTimestamp": 1769706253,
+              "instanceId": "e25701fe-b008-48c5-a9fc-61dcbf6216e1",
+              "source": "web"
+            },
+            "destination": "https://agilapps.com/n8n/webhook/Reserva-de-turno",
+            "date_time": "2026-01-29T14:04:13.279Z",
+            "sender": "595981145720@s.whatsapp.net",
+            "server_url": "http://192.168.2.33:8080",
+            "apikey": "4E327AC3BF44-4BC5-ADE7-D48EB44ABF99"
+          },
+          "webhookUrl": "https://agilapps.com/n8n/webhook/Reserva-de-turno",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Trigger WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Variables EvolutionAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Variables EvolutionAPI": {
+      "main": [
+        [
+          {
+            "node": "FromMe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "AgilSTT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AgilSTT": {
+      "main": [
+        []
+      ]
+    },
+    "FromMe": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create doctores table": {
+      "main": [
+        [
+          {
+            "node": "Create doctores table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create doctores table1": {
+      "main": [
+        [
+          {
+            "node": "Create doctores table2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Insert row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "get_Menu-State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Agendamiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Cancelacion'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Reagendamiento'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        [
+          {
+            "node": "Set-User-Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_Menu-State": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Opcion_Invalida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fuera_del_rango",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Set_Menu-State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_Menu-State": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Call Agendamiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Cancelacion'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Reagendamiento'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "92fb4585-7abd-478c-981c-698c67ec4a5b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3212bfadbae0394348d980ce598dea4cda92f75a33d564a77df9f78616c9dc82"
+  },
+  "id": "ouaIatcHlFckedT99Umpr",
+  "tags": []
+}

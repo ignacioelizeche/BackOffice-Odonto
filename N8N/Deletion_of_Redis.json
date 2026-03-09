@@ -1,0 +1,333 @@
+{
+  "name": "Deletion_of_Redis",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "CallerID"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "fee800ca-dbd2-4788-891e-956f5e90a9f5",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-state"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        128,
+        0
+      ],
+      "id": "17ed7105-db8d-4cbe-a1d8-5016c0e320ba",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "{CallerID}-state\n{CallerID}-DoctorId\n{CallerID}-fecha\n{CallerID}-fechaHoraInicio\n{CallerID}-fechaHoraFin\n{CallerID}-doctores_disponibles\n{CallerID}-HorariosDisponibles\n{{CallerID }}-menu\n{{ CallerID }}-name",
+        "height": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "d97afb2a-1c15-49be-b00e-ff62cb164690",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-DoctorId"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        352,
+        0
+      ],
+      "id": "ac239cae-c837-41c4-92ce-235f9ecc7a03",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-fechaHoraInicio"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "353ae5f9-1823-4897-b039-590d91858af5",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-fechaHoraFin"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "87a1cfc3-29ca-4c38-8937-57050a0bfdfc",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-fecha"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        224
+      ],
+      "id": "25dda08c-945f-4192-afd0-d486662126a4",
+      "name": "Redis4",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-doctores_disponibles"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        128,
+        224
+      ],
+      "id": "e00d33c4-0084-4f16-8a5e-b1f3db27fadd",
+      "name": "Redis5",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-HorariosDisponibles"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        352,
+        224
+      ],
+      "id": "58c1eaf8-27b0-4e20-a932-6fce69129517",
+      "name": "Redis6",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-menu"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        576,
+        224
+      ],
+      "id": "5762bceb-fff5-4f9a-baae-3d8d548d8c03",
+      "name": "Redis7",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $json.CallerID }}-name"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        800,
+        224
+      ],
+      "id": "9127ba17-e6e4-4794-b9bf-fe527201fc01",
+      "name": "Redis8",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis4": {
+      "main": [
+        [
+          {
+            "node": "Redis5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Redis4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis5": {
+      "main": [
+        [
+          {
+            "node": "Redis6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis6": {
+      "main": [
+        [
+          {
+            "node": "Redis7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis7": {
+      "main": [
+        [
+          {
+            "node": "Redis8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "78b36a3d-8041-4e38-b4f4-448350abca0e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3212bfadbae0394348d980ce598dea4cda92f75a33d564a77df9f78616c9dc82"
+  },
+  "id": "9npekj3aPag37ifbW5rTQ",
+  "tags": []
+}
