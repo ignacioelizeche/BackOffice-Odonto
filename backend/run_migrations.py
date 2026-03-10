@@ -154,34 +154,32 @@ def main():
 
     logger.info(f"\nFound {len(migration_files)} migration files")
 
-    # Run migrations that haven't been applied
-    if not status_before["doctor_id_column_exists"]:
-        logger.info("\nApplying pending migrations...")
-        # Skip first migration if constraints already exist (means it was already applied)
-        for migration_file in migration_files:
-            if migration_file.name == "001_create_empresas_and_add_fk.sql":
-                # Check if fk already exists
-                try:
-                    with engine.connect() as conn:
-                        result = conn.execute(text("SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'fk_usuarios_empresa_id'"))
-                        if result.fetchone():
-                            logger.info(f"⊘ Skipping {migration_file.name} - already applied")
-                            continue
-                except:
-                    pass
-            run_migration_file(str(migration_file))
+    # Always run all migrations in order.
+    # Migration files are written to be idempotent (IF EXISTS / IF NOT EXISTS), so
+    # re-running them safely applies any newer schema changes that may be missing.
+    logger.info("\nApplying pending migrations...")
+    for migration_file in migration_files:
+        if migration_file.name == "001_create_empresas_and_add_fk.sql":
+            # Skip first migration if constraints already exist (means it was already applied)
+            try:
+                with engine.connect() as conn:
+                    result = conn.execute(text("SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'fk_usuarios_empresa_id'"))
+                    if result.fetchone():
+                        logger.info(f"⊘ Skipping {migration_file.name} - already applied")
+                        continue
+            except:
+                pass
+        run_migration_file(str(migration_file))
 
-        # Check status after migrations
-        logger.info("\nVerifying migrations...")
-        status_after = check_migration_status()
+    # Check status after migrations
+    logger.info("\nVerifying migrations...")
+    status_after = check_migration_status()
 
-        if status_after["doctor_id_column_exists"]:
-            logger.info("✓ Migrations applied successfully!")
-        else:
-            logger.error("✗ Migrations failed - doctor_id column still not found")
-            return False
+    if status_after["doctor_id_column_exists"]:
+        logger.info("✓ Migrations applied successfully!")
     else:
-        logger.info("\n✓ Migrations already applied")
+        logger.error("✗ Migrations failed - doctor_id column still not found")
+        return False
 
     # Link existing doctor users
     logger.info("\nLinking existing doctor users...")
