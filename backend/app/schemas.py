@@ -202,10 +202,10 @@ class DoctorResponse(BaseModel):
                             work_day = {
                                 'day': getattr(item, 'day', None),
                                 'active': getattr(item, 'active', True),
-                                'startTime': getattr(item, 'startTime', ''),
-                                'endTime': getattr(item, 'endTime', ''),
-                                'breakStart': getattr(item, 'breakStart', ''),
-                                'breakEnd': getattr(item, 'breakEnd', ''),
+                                'startTime': getattr(item, 'start_time', ''),
+                                'endTime': getattr(item, 'end_time', ''),
+                                'breakStart': getattr(item, 'break_start', ''),
+                                'breakEnd': getattr(item, 'break_end', ''),
                             }
                             result.append(work_day)
                         elif isinstance(item, dict):

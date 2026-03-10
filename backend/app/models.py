@@ -102,6 +102,8 @@ class Paciente(Base):
     status = Column(Enum(PatientStatusEnum), default=PatientStatusEnum.nuevo)
     total_visits = Column("totalVisits", Integer, default=0)
     balance = Column(Float, default=0.0)
+    whatsapp_phone = Column(String(20), nullable=True)
+    last_whatsapp_contact = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -236,6 +238,7 @@ class Cita(Base):
     status = Column(Enum(AppointmentStatusEnum), default=AppointmentStatusEnum.pendiente)
     cost = Column(Float)
     notes = Column(Text, nullable=True)
+    google_calendar_event_id = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

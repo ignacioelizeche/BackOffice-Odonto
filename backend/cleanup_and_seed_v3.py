@@ -1,4 +1,4 @@
-"""
+-"""
 Script to clean the database and create 2 admin users for testing
 """
 import os

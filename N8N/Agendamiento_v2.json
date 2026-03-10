@@ -3,47 +3,88 @@
   "nodes": [
     {
       "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "CallerID"
-            },
-            {
-              "name": "Message"
-            },
-            {
-              "name": "Instance"
-            },
-            {
-              "name": "EmpresaID"
-            }
-          ]
-        }
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=🗑️ Tu turno fue cancelado correctamente.",
+        "options_message": {}
       },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -100,
-        300
-      ],
-      "id": "workflow_trigger",
-      "name": "When Executed by Another Workflow"
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [896, 2192],
+      "id": "03cd0353-a37a-4bac-a72b-d2564eaf10da",
+      "name": "cancelacion",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "398f759c-6c2e-4e17-8723-237c215b9358",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.message.toUpperCase() }}",
+              "rightValue": "NO",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [672, 2192],
+      "id": "df1cd286-d3a4-4b1e-8301-b9729fa350b8",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=✅ ¡Turno confirmado!\n\nTu consulta quedó agendada para:\n\n📅 {{ $('Get_date_inicio').item.json.dateInicio.toDateTime().toFormat('dd/MM/yyyy')  }}\n🕒 {{ $('Get_date_inicio').item.json.dateInicio.toDateTime().toLocaleString({timeStyle: 'short'}) }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [2448, 1968],
+      "id": "50cd15f5-9a6d-4546-9d22-2cff4ddaf162",
+      "name": "Confirmacion",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "get",
-        "propertyName": "state",
-        "key": "={{ $json.CallerID }}-state",
+        "propertyName": "DoctorId",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-DoctorId",
+        "keyType": "string",
         "options": {}
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [
-        150,
-        200
-      ],
-      "id": "get_state_redis",
-      "name": "Get State from Redis",
+      "position": [1344, 1968],
+      "id": "218b41e9-15c2-4e25-8f9b-8c04b656f283",
+      "name": "Get_DoctorId2",
       "credentials": {
         "redis": {
           "id": "qdJuf3BX2Q82If8J",
@@ -53,28 +94,297 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://192.168.2.33:8000/api/whatsapp-flow/doctors",
-        "authentication": "none",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
+        "operation": "get",
+        "propertyName": "dateFin",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fechaHoraFin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1120, 1968],
+      "id": "89adb109-e9c0-41f8-8eea-586f5cc895e6",
+      "name": "Get_date_fin",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "dateInicio",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fechaHoraInicio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [896, 1968],
+      "id": "f7b6c9ce-fe24-4834-b623-c1d8ac706f41",
+      "name": "Get_date_inicio",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "name": "empresa_id",
-              "value": "={{ $json.EmpresaID }}"
+              "id": "e2f2a6a2-e6a8-40b0-a429-d1ce21795dfa",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.message.toUpperCase() }}",
+              "rightValue": "SI",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        400,
-        100
-      ],
-      "id": "get_doctors",
-      "name": "Get Doctors from Backend"
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [448, 2064],
+      "id": "835df039-028d-4630-8887-8bb043b5ac5c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "HorariosDisponibles",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-HorariosDisponibles",
+        "keyType": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [672, 1776],
+      "id": "80c220e5-bf31-4034-a949-04d6db94bdbc",
+      "name": "get_HorariosDisponibles",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json.message;\nconst CallerID = $('When Executed by Another Workflow').first().json.CallerID;\nconst Instance = $('When Executed by Another Workflow').first().json.Instance;\n\nconst opcion = parseInt(input, 10);\nconst horariosRaw = $('get_HorariosDisponibles').first().json.HorariosDisponibles;\n\nlet horariosDisponibles;\nif (typeof horariosRaw === 'string') {\n  horariosDisponibles = JSON.parse(horariosRaw);\n} else if (Array.isArray(horariosRaw)) {\n  horariosDisponibles = horariosRaw;\n} else {\n  horariosDisponibles = [];\n}\n\nif (isNaN(opcion) || opcion < 1 || opcion > horariosDisponibles.length) {\n  return [{ json: { valido: false, mensaje: '❌ Opción inválida. Respondé con el número del horario.', numero: CallerID, instancia: Instance } }];\n}\n\nconst horaElegida = horariosDisponibles[opcion - 1]; // \"HH:MM\"\nconst fechaRaw = $('Get_date').first().json.fecha_selected;\n\n// Build start/end datetimes\nconst fechaDate = new Date(fechaRaw);\nconst [hh, mm] = horaElegida.split(':').map(Number);\nfechaDate.setUTCHours(hh, mm, 0, 0);\n\nconst duracion = 30;\nconst finDate = new Date(fechaDate);\nfinDate.setMinutes(finDate.getMinutes() + duracion);\n\nconst doctorName = $('Get_DoctorName_Hora').first().json.doctorName;\nconst patientName = $('get_name').first().json.name;\n\n// Format date for display\nconst dia = String(fechaDate.getUTCDate()).padStart(2, '0');\nconst mes = String(fechaDate.getUTCMonth() + 1).padStart(2, '0');\nconst anio = fechaDate.getUTCFullYear();\nconst fechaTexto = `${dia}/${mes}/${anio}`;\n\nconst mensaje = `📅 *Confirmación de turno*\\n\\n👨‍⚕️ Doctor: ${doctorName}\\n👤 Paciente: ${patientName}\\n📆 Fecha: ${fechaTexto}\\n⏰ Hora: ${horaElegida}\\n⌛ Duración: ${duracion} minutos\\n\\n¿Los datos son correctos?\\nRespondé *SI* para confirmar o *NO* para cancelar.`;\n\nreturn [{\n  json: {\n    valido: true,\n    fecha_hora_inicio: fechaDate.toISOString(),\n    fecha_hora_fin: finDate.toISOString(),\n    hora_elegida: horaElegida,\n    mensaje,\n    numero: CallerID,\n    instancia: Instance\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1776, 1776],
+      "id": "1ab028bc-0f84-4b5e-9a4a-cf16e29d1d1f",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [2000, 1776],
+      "id": "d675d475-e86d-42e2-9838-264e19887087",
+      "name": "Hora1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fechaHoraInicio",
+        "value": "={{ $('Code in JavaScript3').item.json.fecha_hora_inicio }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2224, 1776],
+      "id": "f9db1d53-88c6-4194-9c9d-44a6a1402862",
+      "name": "Set_date_inicio",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fechaHoraFin",
+        "value": "={{ $('Code in JavaScript3').item.json.fecha_hora_fin }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2448, 1776],
+      "id": "93e9027b-0866-4778-bfbd-b5b8ffc2af67",
+      "name": "Set_date_fin",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Confirmacion",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2672, 1776],
+      "id": "0f2af1d0-bb54-4cc1-8520-7af248f79a67",
+      "name": "Set_confirmacion",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "fecha_selected",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fecha",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [896, 1776],
+      "id": "192c1d39-4a3b-410f-a50f-0592797130af",
+      "name": "Get_date",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=No pude reconocer la fecha que enviaste.\nPor favor, escribila en el formato dd/MM/yyyy (por ejemplo: 15/03/2026).",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [896, 1584],
+      "id": "848f466e-3a1a-4e5f-81ef-f0f8ed5c569d",
+      "name": "FechaInvalida",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const texto = $('When Executed by Another Workflow').first().json.message;\n\n// 1. Validar formato dd/MM/yyyy con regex estricta\nconst regex = /^(0[1-9]|[12][0-9]|3[01])\\/(0[1-9]|1[0-2])\\/\\d{4}$/;\n\nif (!regex.test(texto)) {\n  return [{ json: { valido: false, motivo: 'Formato inválido (dd/MM/yyyy)' } }];\n}\n\n// 2. Validar que la fecha exista realmente\nconst [dia, mes, anio] = texto.split('/').map(Number);\nconst fecha = new Date(anio, mes - 1, dia);\n\nconst fechaValida =\n  fecha.getFullYear() === anio &&\n  fecha.getMonth() === mes - 1 &&\n  fecha.getDate() === dia;\n\nif (!fechaValida) {\n  return [{ json: { valido: false, motivo: 'La fecha no existe' } }];\n}\n\n// 3. Fecha válida\nreturn [{\n  json: {\n    valido: true,\n    fecha_original: texto,\n    fecha_date: fecha.toISOString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [448, 1456],
+      "id": "f7fb175a-4785-40b8-9463-b47921bd5f54",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "60e72980-9c72-416d-ab7f-402b7d4a2a2a",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [672, 1456],
+      "id": "5907609a-35ff-49ab-b08b-e413f869d362",
+      "name": "Is_Date"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "State",
+        "key": "={{ $json.CallerID }}-state",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [0, 1296],
+      "id": "f17969e1-6717-4bb5-80ab-eaf1440ae80c",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=La fecha que indicaste corresponde a un día que ya pasó.\nPor favor, envíame una fecha posterior a hoy en el formato dd/MM/yyyy (por ejemplo: 25/03/2026).",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1120, 1488],
+      "id": "283885dd-2d45-49dc-b3a5-0d47903224a7",
+      "name": "FechaPasada",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
     },
     {
       "parameters": {
@@ -90,18 +400,20 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "",
+                    "id": "c8ac0187-bd06-4451-934f-957207aaa36c",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Nombre",
                     "operator": {
-                      "name": "filter.operator.empty",
                       "type": "string",
-                      "operation": "empty"
+                      "operation": "empty",
+                      "singleValue": true
                     }
                   }
-                ]
+                ],
+                "combinator": "and"
               },
-              "renameOutput": false,
-              "output": "AGENDAMIENTO_DOCTOR"
+              "renameOutput": true,
+              "outputKey": "Nombre"
             },
             {
               "conditions": {
@@ -113,18 +425,19 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "AGENDAMIENTO_DOCTOR",
+                    "id": "3523c819-6dff-4377-b084-b5b70bde7049",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Nombre",
                     "operator": {
-                      "name": "filter.operator.equals",
                       "type": "string",
                       "operation": "equals"
                     }
                   }
-                ]
+                ],
+                "combinator": "and"
               },
-              "renameOutput": false,
-              "output": "AGENDAMIENTO_DATE"
+              "renameOutput": true,
+              "outputKey": "inicio"
             },
             {
               "conditions": {
@@ -136,18 +449,20 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "AGENDAMIENTO_DATE",
+                    "id": "5399f39b-7616-4435-9f48-34fd4dc7ed13",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Inicio",
                     "operator": {
-                      "name": "filter.operator.equals",
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
                     }
                   }
-                ]
+                ],
+                "combinator": "and"
               },
-              "renameOutput": false,
-              "output": "AGENDAMIENTO_TIME"
+              "renameOutput": true,
+              "outputKey": "Doctor"
             },
             {
               "conditions": {
@@ -159,300 +474,1521 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.state }}",
-                    "rightValue": "AGENDAMIENTO_TIME",
+                    "id": "a4be1f08-0898-41bc-bea6-ff912f3ac52e",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Fecha",
                     "operator": {
-                      "name": "filter.operator.equals",
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
                     }
                   }
-                ]
+                ],
+                "combinator": "and"
               },
-              "renameOutput": false,
-              "output": "AGENDAMIENTO_CONFIRMATION"
+              "renameOutput": true,
+              "outputKey": "Fecha"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "503f4fe4-b574-41c4-9054-b6230c1a2d77",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Hora",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hora"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ba4575ca-6523-4e12-9e77-3e658141c2f9",
+                    "leftValue": "={{ $json.State }}",
+                    "rightValue": "Confirmacion",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Confirmacion"
             }
           ]
-        }
+        },
+        "options": {}
       },
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
-      "position": [
-        600,
-        200
-      ],
-      "id": "switch_state",
-      "name": "Route by State"
+      "typeVersion": 3.4,
+      "position": [224, 1232],
+      "id": "ba6731e7-a651-45ac-80cd-f639747f2f23",
+      "name": "Fase"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://192.168.2.33:8000/api/whatsapp-flow/available-dates",
-        "authentication": "none",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "name": "empresa_id",
-              "value": "={{ $json.EmpresaID }}"
-            },
-            {
-              "name": "doctor_id",
-              "value": "={{ $json.doctor_selected }}"
+              "id": "1e924288-3c7c-4f79-9bca-2883bde79c02",
+              "leftValue": "={{ $json.fecha_date }}",
+              "rightValue": "={{ $now }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        850,
-        50
-      ],
-      "id": "get_dates",
-      "name": "Get Available Dates"
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [896, 1392],
+      "id": "5de41d1e-f320-4449-b8c6-54c0ab9115e0",
+      "name": "Is_Valid_Date"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://192.168.2.33:8000/api/whatsapp-flow/available-times",
-        "authentication": "none",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "empresa_id",
-              "value": "={{ $json.EmpresaID }}"
-            },
-            {
-              "name": "doctor_id",
-              "value": "={{ $json.doctor_selected }}"
-            },
-            {
-              "name": "date",
-              "value": "={{ $json.date_selected }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        850,
-        150
-      ],
-      "id": "get_times",
-      "name": "Get Available Times"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://192.168.2.33:8000/api/whatsapp-flow/create-appointment",
-        "authentication": "none",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "empresa_id",
-              "value": "={{ $json.EmpresaID }}"
-            },
-            {
-              "name": "caller_id",
-              "value": "={{ $json.CallerID }}"
-            },
-            {
-              "name": "doctor_id",
-              "value": "={{ $json.doctor_selected }}"
-            },
-            {
-              "name": "date",
-              "value": "={{ $json.date_selected }}"
-            },
-            {
-              "name": "time",
-              "value": "={{ $json.time_selected }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        850,
-        250
-      ],
-      "id": "create_appointment",
-      "name": "Create Appointment in Backend"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://192.168.2.33:30110/message/sendText/default",
-        "authentication": "none",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ $json.CallerID }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.response_message }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1100,
-        200
-      ],
-      "id": "send_whatsapp",
-      "name": "Send WhatsApp Response"
-    },
-    {
-      "parameters": {
-        "operation": "set",
-        "propertyName": "state",
-        "key": "={{ $json.CallerID }}-state",
-        "value": "AGENDAMIENTO_DOCTOR",
-        "ttl": 86400,
+        "operation": "get",
+        "propertyName": "DoctorId",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-DoctorId",
+        "keyType": "string",
         "options": {}
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [
-        700,
-        500
-      ],
-      "id": "update_redis_state",
-      "name": "Update State in Redis"
+      "position": [1120, 1296],
+      "id": "990c061b-f971-4fc0-8124-b2980643c4d0",
+      "name": "Get_DoctorId",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "doctorName",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-doctorName",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1344, 1296],
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Get_DoctorName",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('When Executed by Another Workflow').item.json.backend_url }}/api/whatsapp-flow/available-times",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"empresa_id\": {{ $('When Executed by Another Workflow').item.json.empresa_id }},\n  \"doctor_id\": {{ $('Get_DoctorId').item.json.DoctorId }},\n  \"date\": \"{{ $('Code in JavaScript1').item.json.fecha_date.substring(0, 10) }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1568, 1296],
+      "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+      "name": "HTTP_AvailableTimes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $('HTTP_AvailableTimes').first().json;\nconst doctorName = $('Get_DoctorName').first().json.doctorName;\nconst fechaISO = $('Code in JavaScript1').first().json.fecha_date;\nconst CallerID = $('When Executed by Another Workflow').first().json.CallerID;\nconst Instance = $('When Executed by Another Workflow').first().json.Instance;\n\n// Parse date for display\nconst fecha = new Date(fechaISO);\nconst dia = String(fecha.getDate()).padStart(2, '0');\nconst mes = String(fecha.getMonth() + 1).padStart(2, '0');\nconst anio = fecha.getFullYear();\nconst fechaTexto = `${dia}/${mes}/${anio}`;\n\nif (!response.success || !response.times || response.times.length === 0) {\n  return [{\n    json: {\n      hayDisponibilidad: false,\n      mensaje: `❌ No hay horarios disponibles para ${doctorName} el ${fechaTexto}.\\n\\nPor favor, elegí otra fecha escribiendo en formato DD/MM/AAAA.`,\n      numero: CallerID,\n      instancia: Instance,\n      horariosDisponibles: []\n    }\n  }];\n}\n\nconst disponibles = response.times;\nconst emojis = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];\n\nlet mensaje = `Estos son los horarios disponibles para ${doctorName} el ${fechaTexto}:\\n\\n`;\ndisponibles.forEach((h, i) => {\n  const emoji = emojis[i] || `${i+1}.`;\n  mensaje += `${emoji} ${h}\\n`;\n});\nmensaje += `\\nRespondé escribiendo el número del horario que prefieras.\\n(Ejemplo: 2)`;\n\nreturn [{\n  json: {\n    hayDisponibilidad: true,\n    mensaje,\n    numero: CallerID,\n    instancia: Instance,\n    horariosDisponibles: disponibles\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1792, 1296],
+      "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+      "name": "Build_Slots_Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f6a7b8c9-0001-0001-0001-000000000001",
+              "leftValue": "={{ $json.hayDisponibilidad }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [2016, 1296],
+      "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+      "name": "HasSlots"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $json.instancia }}",
+        "remoteJid": "={{ $json.numero }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [2240, 1392],
+      "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+      "name": "NoSlots",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [2464, 1200],
+      "id": "abe68636-b861-497a-b576-d5c13bd27c41",
+      "name": "Hora",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-fecha",
+        "value": "={{ $('Code in JavaScript1').item.json.fecha_date }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [3136, 1200],
+      "id": "cf9bc7db-7198-4922-8ddc-d197420184d9",
+      "name": "Set_date",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Hora",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [3360, 1200],
+      "id": "db7763e6-d003-424d-aa34-4161cb7c2c5f",
+      "name": "Set_hora",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-HorariosDisponibles",
+        "messageData": "={{ $('Build_Slots_Message').item.json.horariosDisponibles }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2912, 1200],
+      "id": "78f0f456-8825-4340-9767-ec0b5c5ba3ef",
+      "name": "Save_Horarios",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1344, 1104],
+      "id": "eec7e697-d101-4501-ae21-49cd3278fb35",
+      "name": "NumeroInvalido",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json.message;\nconst CallerID = $('When Executed by Another Workflow').first().json.CallerID;\nconst Instance = $('When Executed by Another Workflow').first().json.Instance;\nconst doctoresRaw = $('str->arr').first().json.arrayDoctores;\n\nlet doctores;\nif (typeof doctoresRaw === 'string') {\n  doctores = JSON.parse(doctoresRaw);\n} else {\n  doctores = doctoresRaw;\n}\n\nconst opcion = parseInt(input, 10);\n\nif (isNaN(opcion) || opcion < 1 || opcion > doctores.length) {\n  return [{ json: { valido: false, mensaje: '❌ Opción inválida. Por favor, elegí un número de la lista.', numero: CallerID, instancia: Instance } }];\n}\n\nconst doctorElegido = doctores[opcion - 1];\n\nreturn [{\n  json: {\n    valido: true,\n    id: doctorElegido.id,\n    name: doctorElegido.name,\n    specialty: doctorElegido.specialty || 'Odontología General',\n    mensaje: `Perfecto 👍\\nElegiste a ${doctorElegido.name}.\\n\\n¿Para qué día querés agendar la consulta?\\n\\n📅 Escribí la fecha en formato DD/MM/AAAA.`,\n    numero: CallerID,\n    instancia: Instance\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [896, 1008],
+      "id": "4c236bf6-11b0-4727-92fc-fc65b1fc4e50",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "=arrayDoctores",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-doctores_disponibles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [448, 1008],
+      "id": "bfff2885-c053-41d9-b72f-bf488328c9df",
+      "name": "Get_Array_Doctores",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "def45316-a4eb-44ff-921b-0e7b79655ded",
+              "name": "arrayDoctores",
+              "value": "={{ $json.arrayDoctores.parseJson() }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 1008],
+      "id": "61575137-c653-4012-9728-69589f7e99b5",
+      "name": "str->arr"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a3c61a2-e6dc-4380-8532-9b16aecb61e6",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1120, 1008],
+      "id": "ecfb69d2-515e-493c-9fbe-9893936585df",
+      "name": "Is_selection_valid"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1344, 912],
+      "id": "9f8a3d15-4f47-4501-a5d3-5900cd48b0d3",
+      "name": "Fecha",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Fecha",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1568, 912],
+      "id": "3c0c99bd-2ab8-48b0-b28e-7d13da2abb65",
+      "name": "Set_fecha",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-DoctorId",
+        "value": "={{ $('Code in JavaScript2').item.json.id }}",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1792, 912],
+      "id": "59ed0ed5-4ef6-4b43-ab3f-d65799c6950f",
+      "name": "Set_DoctorId",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-doctorName",
+        "value": "={{ $('Code in JavaScript2').item.json.name }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2016, 912],
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Set_DoctorName",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Parsear mensaje de inicio').item.json.numero }}-state",
+        "value": "Inicio",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1344, 720],
+      "id": "fe502097-a0b3-473f-a7c5-5d150e699662",
+      "name": "Set_inicio",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('When Executed by Another Workflow').item.json.backend_url }}/api/whatsapp-flow/doctors?empresa_id={{ $('When Executed by Another Workflow').item.json.empresa_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [672, 720],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "HTTP_GetDoctors"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $json.instancia }}",
+        "remoteJid": "={{ $json.numero }}",
+        "messageText": "={{ $json.mensaje }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [1120, 720],
+      "id": "384d2c06-7224-43e9-bf88-709d1438dfcd",
+      "name": "Inicio",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $json.data.key.remoteJid }}-doctores_disponibles",
+        "value": "={{ $('Parsear mensaje de inicio').item.json.doctoresIncluidos.toJsonString() }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1568, 720],
+      "id": "1f80eb97-9853-4543-8a24-f8e93b8d27ed",
+      "name": "Array_Doctores",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// The API returns { success, doctors: [{id, name, specialty}], message }\nconst response = items[0].json;\nconst doctores = response.doctors || [];\n\nif (!doctores.length) {\n  return [{\n    json: {\n      mensaje: \"⚠️ No hay doctores disponibles en este momento. Por favor, contactá con recepción.\",\n      numero: $('When Executed by Another Workflow').first().json.CallerID,\n      instancia: $('When Executed by Another Workflow').first().json.Instance,\n      doctoresIncluidos: []\n    }\n  }];\n}\n\nlet mensaje = \"Por favor, elegí el doctor con quien querés agendar:\\n\\n\";\nconst emojis = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];\n\ndoctores.forEach((doctor, index) => {\n  const emoji = emojis[index] || `${index + 1}.`;\n  mensaje += `${emoji} ${doctor.name} – ${doctor.specialty || 'Odontología General'}\\n`;\n});\n\nreturn [{\n  json: {\n    mensaje: mensaje.trim(),\n    numero: $('When Executed by Another Workflow').first().json.CallerID,\n    instancia: $('When Executed by Another Workflow').first().json.Instance,\n    doctoresIncluidos: doctores\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [896, 720],
+      "id": "06632a50-cb3c-48f7-9cee-33d755b2a21c",
+      "name": "Parsear mensaje de inicio"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "CallerID"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "Instance"
+            },
+            {
+              "name": "empresa_id"
+            },
+            {
+              "name": "backend_url"
+            }
+          ]
+        }
+      },
+      "id": "f85e3538-bf2a-4642-806f-1f344515070c",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [-448, 1664]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "9npekj3aPag37ifbW5rTQ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/9npekj3aPag37ifbW5rTQ",
+          "cachedResultName": "Deletion_of_Redis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CallerID": "={{ $('When Executed by Another Workflow').item.json.CallerID }}"
+          },
+          "matchingColumns": [
+            "CallerID"
+          ],
+          "schema": [
+            {
+              "id": "CallerID",
+              "displayName": "CallerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [2672, 2032],
+      "id": "891dbe9e-f965-40a3-b453-b7f8fc933872",
+      "name": "Call 'DeleteKeys'"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=Lo siento, no entendí tu respuesta.\n\nPor favor, respondé con:\nSI 👉 para confirmar el turno  \nNO 👉 para cancelarlo",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [896, 2384],
+      "id": "fb72aab8-b648-492d-ae29-c0249e741b81",
+      "name": "cancelacion1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('When Executed by Another Workflow').item.json.Instance }}",
+        "remoteJid": "={{ $('When Executed by Another Workflow').item.json.CallerID }}",
+        "messageText": "=🗓️ Elegiste *Agendar una cita*.\n\nPor favor, escribí tu *nombre completo* para continuar con el proceso.\n\nSi en cualquier momento deseás cancelar, escribí *CANCELAR*.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [448, 528],
+      "id": "26c5fc40-a776-43d0-be97-65725169d21c",
+      "name": "Inicio1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "KPgyNGbbQywX4J4r",
+          "name": "Ignacio Elizeche"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-state",
+        "value": "Nombre",
+        "keyType": "string"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [672, 528],
+      "id": "48d886b1-a0ba-4049-aa47-168e009d85bd",
+      "name": "Set_Nombre",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-name",
+        "value": "={{ $('When Executed by Another Workflow').item.json.message.toTitleCase()}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [448, 720],
+      "id": "bbfa8e1f-a72c-4a99-90d2-c6dab7e32e2d",
+      "name": "set name",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "name",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [448, 1776],
+      "id": "17c59ca0-afd0-4fd7-aa39-3ac0dee06bef",
+      "name": "get_name",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "name",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [672, 1968],
+      "id": "71c8623f-71db-4619-982e-4d085fb35f39",
+      "name": "get_name1",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d810d814-5e9f-4fc7-801a-329aa1ec768c",
+              "leftValue": "={{ $json.message.toUpperCase() }}",
+              "rightValue": "CANCELAR",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-224, 1664],
+      "id": "14a707dd-59a2-4471-97ca-b8f8dce53b6b",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "doctorName",
+        "key": "={{ $('When Executed by Another Workflow').item.json.CallerID }}-doctorName",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1120, 1776],
+      "id": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+      "name": "Get_DoctorName_Hora",
+      "credentials": {
+        "redis": {
+          "id": "qdJuf3BX2Q82If8J",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callerID = $('When Executed by Another Workflow').first().json.CallerID.replace(/@s\\.whatsapp\\.net/g, '');\nconst patientName = $('get_name1').first().json.name;\nconst fechaHoraInicio = $('Get_date_inicio').first().json.dateInicio;\nconst dt = new Date(fechaHoraInicio);\nconst date = dt.toISOString().substring(0, 10);\nconst time = `${String(dt.getUTCHours()).padStart(2,'0')}:${String(dt.getUTCMinutes()).padStart(2,'0')}`;\nconst doctorId = $('Get_DoctorId2').first().json.DoctorId;\nconst empresaId = $('When Executed by Another Workflow').first().json.empresa_id;\nconst backendUrl = $('When Executed by Another Workflow').first().json.backend_url;\n\nreturn [{ json: { callerID, patientName, date, time, doctorId, empresaId, backendUrl } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1552, 1968],
+      "id": "c9d0e1f2-a3b4-5678-cdef-789012345678",
+      "name": "Prepare_API_Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.backendUrl }}/api/whatsapp-flow/create-appointment",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"empresa_id\": {{ $json.empresaId }},\n  \"caller_id\": \"{{ $json.callerID }}\",\n  \"doctor_id\": {{ $json.doctorId }},\n  \"date\": \"{{ $json.date }}\",\n  \"time\": \"{{ $json.time }}\",\n  \"patient_name\": \"{{ $json.patientName }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1776, 1968],
+      "id": "d0e1f2a3-b4c5-6789-defa-890123456789",
+      "name": "HTTP_CreateAppointment"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $json.calendar_id }}",
+          "mode": "id"
+        },
+        "start": "={{ $('Get_date_inicio').item.json.dateInicio.toDateTime().setZone('America/Buenos_Aires').plus(3, 'hours') }}",
+        "end": "={{ $('Get_date_fin').item.json.dateFin.toDateTime().setZone('America/Buenos_Aires').plus(3, 'hours') }}",
+        "additionalFields": {
+          "description": "=Nombre del paciente: {{ $('get_name1').item.json.name }}\nNumero de telefono: {{ $('When Executed by Another Workflow').item.json.CallerID.replace('@s.whatsapp.net','') }}\n",
+          "showMeAs": "opaque",
+          "summary": "=Turno \"{{ $('get_name1').item.json.name }}\""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [2000, 1968],
+      "id": "a3cda16a-1861-450d-b70b-20638398c908",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "nsnIVzGtKgqXNO3s",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE citas SET google_calendar_event_id = '{{ $('Create an event').item.json.id }}' WHERE id = {{ $('HTTP_CreateAppointment').item.json.appointment_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2224, 1968],
+      "id": "e1f2a3b4-c5d6-7890-efab-901234567890",
+      "name": "PG_SaveCalendarId",
+      "credentials": {
+        "postgres": {
+          "id": "PG_AgilDent",
+          "name": "PostgreSQL AgilDent"
+        }
+      }
     }
   ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "CallerID": "595981145720@s.whatsapp.net",
+          "message": "si",
+          "Instance": "IgnacioElizeche",
+          "empresa_id": 1,
+          "backend_url": "http://localhost:8000"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "connections": {
-    "workflow_trigger": {
+    "Redis": {
       "main": [
         [
           {
-            "node": "get_state_redis",
+            "node": "Fase",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "get_state_redis": {
+    "HTTP_GetDoctors": {
       "main": [
         [
           {
-            "node": "switch_state",
+            "node": "Parsear mensaje de inicio",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "switch_state": {
+    "Inicio": {
       "main": [
         [
           {
-            "node": "get_doctors",
+            "node": "Set_inicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fecha": {
+      "main": [
+        [
+          {
+            "node": "Set_fecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Is_Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_inicio": {
+      "main": [
+        [
+          {
+            "node": "Array_Doctores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Is_selection_valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear mensaje de inicio": {
+      "main": [
+        [
+          {
+            "node": "Inicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_Array_Doctores": {
+      "main": [
+        [
+          {
+            "node": "str->arr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "str->arr": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_selection_valid": {
+      "main": [
+        [
+          {
+            "node": "Fecha",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "get_dates",
+            "node": "NumeroInvalido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_Valid_Date": {
+      "main": [
+        [
+          {
+            "node": "Get_DoctorId",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "get_times",
+            "node": "FechaPasada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is_Date": {
+      "main": [
+        [
+          {
+            "node": "Is_Valid_Date",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "create_appointment",
+            "node": "FechaInvalida",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "get_doctors": {
+    "Set_fecha": {
       "main": [
         [
           {
-            "node": "send_whatsapp",
+            "node": "Set_DoctorId",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "get_dates": {
+    "Get_DoctorId": {
       "main": [
         [
           {
-            "node": "send_whatsapp",
+            "node": "Get_DoctorName",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "get_times": {
+    "Get_DoctorName": {
       "main": [
         [
           {
-            "node": "send_whatsapp",
+            "node": "HTTP_AvailableTimes",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "create_appointment": {
+    "HTTP_AvailableTimes": {
       "main": [
         [
           {
-            "node": "send_whatsapp",
+            "node": "Build_Slots_Message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "send_whatsapp": {
+    "Build_Slots_Message": {
       "main": [
         [
           {
-            "node": "update_redis_state",
+            "node": "HasSlots",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "HasSlots": {
+      "main": [
+        [
+          {
+            "node": "Hora",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoSlots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hora": {
+      "main": [
+        [
+          {
+            "node": "Save_Horarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save_Horarios": {
+      "main": [
+        [
+          {
+            "node": "Set_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_DoctorId": {
+      "main": [
+        [
+          {
+            "node": "Set_DoctorName",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_date": {
+      "main": [
+        [
+          {
+            "node": "Set_hora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fase": {
+      "main": [
+        [
+          {
+            "node": "Inicio1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "set name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get_Array_Doctores",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_HorariosDisponibles": {
+      "main": [
+        [
+          {
+            "node": "Get_date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_date": {
+      "main": [
+        [
+          {
+            "node": "Get_DoctorName_Hora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_DoctorName_Hora": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Hora1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hora1": {
+      "main": [
+        [
+          {
+            "node": "Set_date_inicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_date_inicio": {
+      "main": [
+        [
+          {
+            "node": "Set_date_fin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_date_fin": {
+      "main": [
+        [
+          {
+            "node": "Set_confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_date_fin": {
+      "main": [
+        [
+          {
+            "node": "Get_DoctorId2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_date_inicio": {
+      "main": [
+        [
+          {
+            "node": "Get_date_fin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "get_name1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_DoctorId2": {
+      "main": [
+        [
+          {
+            "node": "Prepare_API_Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare_API_Data": {
+      "main": [
+        [
+          {
+            "node": "HTTP_CreateAppointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP_CreateAppointment": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "PG_SaveCalendarId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG_SaveCalendarId": {
+      "main": [
+        [
+          {
+            "node": "Confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "cancelacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cancelacion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmacion": {
+      "main": [
+        [
+          {
+            "node": "Call 'DeleteKeys'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancelacion": {
+      "main": [
+        [
+          {
+            "node": "Call 'DeleteKeys'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inicio1": {
+      "main": [
+        [
+          {
+            "node": "Set_Nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_Nombre": {
+      "main": [
+        []
+      ]
+    },
+    "set name": {
+      "main": [
+        [
+          {
+            "node": "HTTP_GetDoctors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_name": {
+      "main": [
+        [
+          {
+            "node": "get_HorariosDisponibles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_name1": {
+      "main": [
+        [
+          {
+            "node": "Get_date_inicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cancelacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'DeleteKeys'": {
+      "main": [
+        []
+      ]
+    },
+    "NoSlots": {
+      "main": [
+        []
+      ]
+    },
+    "Set_DoctorName": {
+      "main": [
+        []
       ]
     }
   },
   "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "availableInMCP": false
   },
-  "versionId": "1a2b3c4d",
+  "versionId": "v2-0001-0001-0001-000000000001",
   "meta": {
-    "instanceId": "123456789"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3212bfadbae0394348d980ce598dea4cda92f75a33d564a77df9f78616c9dc82"
   },
-  "pinData": null
+  "id": "Agendamiento_v2",
+  "tags": []
 }

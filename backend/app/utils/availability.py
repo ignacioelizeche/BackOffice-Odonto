@@ -169,7 +169,8 @@ def generate_time_slots(
 def get_occupied_blocks(
     doctor_id: int,
     date_str: str,
-    db: Session
+    db: Session,
+    exclude_appointment_id: Optional[int] = None
 ) -> List[Tuple[int, int]]:
     """
     Get occupied time blocks (as minutes from midnight) for a doctor on a date
@@ -178,16 +179,22 @@ def get_occupied_blocks(
         doctor_id: Doctor ID
         date_str: Date in YYYY-MM-DD format
         db: Database session
+        exclude_appointment_id: Optional appointment ID to exclude (for rescheduling)
 
     Returns:
         List of tuples (start_minutes, end_minutes) for occupied blocks
     """
     # Get all non-cancelled appointments for this doctor on this date
-    appointments = db.query(Cita).filter(
+    query = db.query(Cita).filter(
         (Cita.doctor_id == doctor_id) &
         (Cita.date == date_str) &
         (Cita.status != AppointmentStatusEnum.cancelada)
-    ).all()
+    )
+
+    if exclude_appointment_id is not None:
+        query = query.filter(Cita.id != exclude_appointment_id)
+
+    appointments = query.all()
 
     occupied_blocks = []
 
@@ -311,27 +318,29 @@ def get_available_slots(
 
 def validate_appointment_availability(
     doctor_id: int,
-    date_str: str,
-    start_time: str,
-    duration_str: str,
-    db: Session
+    date: str,
+    time: str,
+    duration: str,
+    db: Session,
+    exclude_appointment_id: Optional[int] = None
 ) -> Tuple[bool, Optional[str]]:
     """
     Comprehensive validation for appointment availability
 
     Args:
         doctor_id: Doctor ID
-        date_str: Date in YYYY-MM-DD format
-        start_time: Start time in HH:MM format
-        duration_str: Duration string (e.g., "60 min")
+        date: Date in YYYY-MM-DD format
+        time: Start time in HH:MM format
+        duration: Duration string (e.g., "60 min")
         db: Database session
+        exclude_appointment_id: Optional appointment ID to exclude (for rescheduling)
 
     Returns:
         Tuple (is_available: bool, error_message: Optional[str])
     """
     # Check if date is not in the past
     try:
-        appointment_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
         today = datetime.now().date()
 
         if appointment_date < today:
@@ -340,7 +349,7 @@ def validate_appointment_availability(
         return False, "Fecha inválida"
 
     # Check if doctor has schedule for this day
-    schedule = get_doctor_schedule_for_date(doctor_id, date_str, db)
+    schedule = get_doctor_schedule_for_date(doctor_id, date, db)
 
     if not schedule:
         return False, "Doctor no tiene horario asignado para este día"
@@ -349,16 +358,16 @@ def validate_appointment_availability(
         return False, "Doctor no atiende este día"
 
     # Convert duration
-    duration_minutes = parse_duration_to_minutes(duration_str)
+    duration_minutes = parse_duration_to_minutes(duration)
 
     # Check if time is within schedule
-    if not is_time_within_schedule(start_time, duration_minutes, schedule):
+    if not is_time_within_schedule(time, duration_minutes, schedule):
         return False, "Hora fuera del horario del doctor o conflicto con descanso"
 
     # Check if time is available (no conflicts with existing appointments)
-    occupied_blocks = get_occupied_blocks(doctor_id, date_str, db)
+    occupied_blocks = get_occupied_blocks(doctor_id, date, db, exclude_appointment_id)
 
-    if not is_time_available(start_time, duration_minutes, occupied_blocks):
+    if not is_time_available(time, duration_minutes, occupied_blocks):
         return False, "Ese horario no está disponible"
 
     return True, None
