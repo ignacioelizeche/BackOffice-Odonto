@@ -250,17 +250,17 @@ def is_time_within_schedule(start_time: str, duration_minutes: int, schedule: Ho
     start_minutes = time_to_minutes(start_time)
     end_minutes = start_minutes + duration_minutes
 
-    schedule_start = time_to_minutes(schedule.startTime)
-    schedule_end = time_to_minutes(schedule.endTime)
+    schedule_start = time_to_minutes(schedule.start_time)
+    schedule_end = time_to_minutes(schedule.end_time)
 
     # Basic check: appointment must be within schedule hours
     if start_minutes < schedule_start or end_minutes > schedule_end:
         return False
 
     # Check if appointment overlaps with break
-    if schedule.breakStart and schedule.breakEnd:
-        break_start = time_to_minutes(schedule.breakStart)
-        break_end = time_to_minutes(schedule.breakEnd)
+    if schedule.break_start and schedule.break_end:
+        break_start = time_to_minutes(schedule.break_start)
+        break_end = time_to_minutes(schedule.break_end)
 
         # Appointment overlaps with break if it starts before break ends and ends after break starts
         if start_minutes < break_end and end_minutes > break_start:
@@ -297,10 +297,10 @@ def get_available_slots(
 
     # Generate all possible slots for this day
     all_slots = generate_time_slots(
-        schedule.startTime,
-        schedule.endTime,
-        schedule.breakStart,
-        schedule.breakEnd,
+        schedule.start_time,
+        schedule.end_time,
+        schedule.break_start,
+        schedule.break_end,
         slot_duration
     )
 

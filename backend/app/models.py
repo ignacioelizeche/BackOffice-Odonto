@@ -207,6 +207,39 @@ class HorarioDoctor(Base):
     # Relationships
     doctor = relationship("Doctor", back_populates="work_schedule")
 
+    # Backward-compatibility aliases for legacy camelCase access.
+    @property
+    def startTime(self):
+        return self.start_time
+
+    @startTime.setter
+    def startTime(self, value):
+        self.start_time = value
+
+    @property
+    def endTime(self):
+        return self.end_time
+
+    @endTime.setter
+    def endTime(self, value):
+        self.end_time = value
+
+    @property
+    def breakStart(self):
+        return self.break_start
+
+    @breakStart.setter
+    def breakStart(self, value):
+        self.break_start = value
+
+    @property
+    def breakEnd(self):
+        return self.break_end
+
+    @breakEnd.setter
+    def breakEnd(self, value):
+        self.break_end = value
+
 class EstadisticasDoctor(Base):
     __tablename__ = "estadisticas_doctores"
 
