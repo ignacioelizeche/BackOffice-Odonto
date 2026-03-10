@@ -190,15 +190,38 @@ class DoctorResponse(BaseModel):
     @classmethod
     def handle_work_schedule(cls, data):
         """Convert work_schedule (snake_case) from ORM to workSchedule (camelCase)"""
-        if isinstance(data, dict):
-            # If we got work_schedule from SQLAlchemy ORM, convert it
+        # Handle ORM objects
+        if hasattr(data, 'work_schedule') and not isinstance(data, dict):
+            work_schedule = getattr(data, 'work_schedule', None)
+            if work_schedule:
+                result = []
+                for item in work_schedule:
+                    work_day = {
+                        'day': getattr(item, 'day', None),
+                        'active': getattr(item, 'active', True),
+                        'startTime': getattr(item, 'start_time', ''),
+                        'endTime': getattr(item, 'end_time', ''),
+                        'breakStart': getattr(item, 'break_start', ''),
+                        'breakEnd': getattr(item, 'break_end', ''),
+                    }
+                    result.append(work_day)
+                # Convert ORM object to dict for Pydantic processing
+                data_dict = {}
+                for key in ['id', 'name', 'initials', 'email', 'phone', 'specialty',
+                           'license_number', 'status', 'patients_today', 'patients_total',
+                           'rating', 'review_count', 'years_experience', 'monthly_stats', 'empresa_id']:
+                    if hasattr(data, key):
+                        data_dict[key] = getattr(data, key)
+                data_dict['workSchedule'] = result if result else None
+                return data_dict
+        # Handle dict objects
+        elif isinstance(data, dict):
             if 'work_schedule' in data and 'workSchedule' not in data:
                 work_schedule = data.pop('work_schedule', None)
                 if work_schedule:
                     result = []
                     for item in work_schedule:
                         if hasattr(item, '__dict__'):
-                            # Convert SQLAlchemy object to dict
                             work_day = {
                                 'day': getattr(item, 'day', None),
                                 'active': getattr(item, 'active', True),
