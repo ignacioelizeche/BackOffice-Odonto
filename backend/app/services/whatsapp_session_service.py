@@ -8,12 +8,31 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
-from app.models import WhatsAppSession, Paciente
+from app.models import WhatsAppSession, Paciente, Diente
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 SESSION_EXPIRE_HOURS = settings.WHATSAPP_SESSION_EXPIRE_HOURS
+
+
+def _create_default_teeth_for_patient(patient_id: int, empresa_id: int, db: Session) -> None:
+    """Create the default 32 FDI teeth for a new patient."""
+    fdi_tooth_numbers = [
+        18, 17, 16, 15, 14, 13, 12, 11,
+        21, 22, 23, 24, 25, 26, 27, 28,
+        48, 47, 46, 45, 44, 43, 42, 41,
+        31, 32, 33, 34, 35, 36, 37, 38,
+    ]
+
+    for tooth_number in fdi_tooth_numbers:
+        db.add(Diente(
+            patient_id=patient_id,
+            number=tooth_number,
+            name=f"Diente {tooth_number}",
+            status="sano",
+            empresa_id=empresa_id,
+        ))
 
 
 def get_or_create_session(
@@ -456,6 +475,10 @@ def get_or_create_patient(
             last_whatsapp_contact=datetime.now(timezone.utc)
         )
         db.add(patient)
+        db.flush()
+
+        _create_default_teeth_for_patient(patient.id, empresa_id, db)
+
         db.commit()
         db.refresh(patient)
         return patient

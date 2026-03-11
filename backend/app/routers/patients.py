@@ -64,7 +64,7 @@ def get_initials(name: str) -> str:
     return name[:2].upper()
 
 
-def build_patient_response(patient: Paciente) -> PatientResponse:
+def build_patient_response(patient: Paciente, include_teeth: bool = False) -> PatientResponse:
     """Build a resilient patient response from ORM data with legacy null handling."""
     name = patient.name or "Paciente"
     initials = patient.initials or get_initials(name)
@@ -75,6 +75,38 @@ def build_patient_response(patient: Paciente) -> PatientResponse:
     status = patient.status or "nuevo"
     total_visits = patient.total_visits if patient.total_visits is not None else 0
     balance = patient.balance if patient.balance is not None else 0.0
+
+    teeth_data = None
+    if include_teeth:
+        teeth_data = []
+        for tooth in patient.teeth or []:
+            records = []
+            for record in tooth.records or []:
+                records.append({
+                    "id": record.id,
+                    "date": record.date,
+                    "treatment": record.treatment,
+                    "doctor": record.doctor,
+                    "notes": record.notes,
+                    "cost": record.cost,
+                    "attachments": [
+                        {
+                            "id": a.id,
+                            "name": a.name,
+                            "size": a.size,
+                            "type": a.type,
+                            "download_url": a.download_url,
+                        }
+                        for a in (record.attachments or [])
+                    ]
+                })
+
+            teeth_data.append({
+                "number": tooth.number,
+                "name": tooth.name,
+                "status": tooth.status.value if hasattr(tooth.status, "value") else tooth.status,
+                "records": records,
+            })
 
     return PatientResponse(
         id=patient.id,
@@ -91,7 +123,7 @@ def build_patient_response(patient: Paciente) -> PatientResponse:
         treatments=[],
         totalVisits=total_visits,
         balance=balance,
-        teeth=None,
+        teeth=teeth_data,
         empresa_id=patient.empresa_id,
     )
 
@@ -309,7 +341,7 @@ def get_patient(
     # Refresh to get all teeth
     db.refresh(patient)
 
-    return build_patient_response(patient)
+    return build_patient_response(patient, include_teeth=True)
 
 @router.put("/{patient_id}", response_model=PatientUpdateResponse)
 def update_patient(

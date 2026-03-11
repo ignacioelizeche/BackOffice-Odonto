@@ -55,7 +55,7 @@ export default function PatientDetailPage({
       title={patient.name}
       subtitle="Ficha dental del paciente"
     >
-      <PatientDetailContent patient={patient} />
+      <PatientDetailContent patient={patient} onPatientUpdated={setPatient} />
     </DashboardShell>
   )
 }
