@@ -5,6 +5,7 @@ Handles communication with N8N workflows for calendar and other automated tasks
 
 import httpx
 import logging
+import json
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -39,9 +40,13 @@ class N8NIntegrationService:
         """
         webhook_url = settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL
 
+        logger.info(f"[N8N] trigger_create_doctor_calendar called for doctor {doctor_id}")
+        logger.info(f"[N8N] Webhook URL configured: {bool(webhook_url)}")
+        logger.info(f"[N8N] Webhook URL value: {webhook_url}")
+
         if not webhook_url:
             error_msg = "N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL not configured"
-            logger.error(error_msg)
+            logger.error(f"[N8N] {error_msg}")
             raise Exception(error_msg)
 
         payload = {
@@ -52,25 +57,35 @@ class N8NIntegrationService:
             "webhook_url": callback_url
         }
 
+        logger.info(f"[N8N] Payload to send: {json.dumps(payload, indent=2)}")
+
         try:
+            logger.info(f"[N8N] Sending POST request to: {webhook_url}")
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     webhook_url,
                     json=payload,
                     timeout=30.0
                 )
+
+                logger.info(f"[N8N] Response status code: {response.status_code}")
+                logger.info(f"[N8N] Response body: {response.text}")
+
                 response.raise_for_status()
 
-                logger.info(f"Successfully triggered N8N calendar creation for doctor {doctor_id}")
-                return response.json()
+                logger.info(f"[N8N] Successfully triggered N8N calendar creation for doctor {doctor_id}")
+                try:
+                    return response.json()
+                except:
+                    return {"success": True}
 
         except httpx.HTTPError as e:
-            error_msg = f"Failed to trigger N8N calendar creation: {str(e)}"
-            logger.error(error_msg)
+            error_msg = f"Failed to trigger N8N calendar creation (HTTP Error): {str(e)}"
+            logger.error(f"[N8N] {error_msg}")
             raise Exception(error_msg)
         except Exception as e:
             error_msg = f"Unexpected error triggering N8N workflow: {str(e)}"
-            logger.error(error_msg)
+            logger.error(f"[N8N] {error_msg}")
             raise
 
 

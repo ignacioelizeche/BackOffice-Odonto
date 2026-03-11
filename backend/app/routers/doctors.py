@@ -206,8 +206,14 @@ def create_doctor(
         logger.warning(f"Failed to send welcome email to {doctor_data.email}")
 
     # Trigger N8N workflow to create Google Calendar for this doctor (in background)
+    logger.info(f"[CALENDAR] N8N URL configured: {bool(settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL)}")
+    logger.info(f"[CALENDAR] N8N URL value: {settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL}")
+
     if settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL:
         callback_url = f"{settings.BACKEND_URL}/api/calendar/doctor-calendar-created"
+        logger.info(f"[CALENDAR] Triggering N8N webhook for doctor {new_doctor.id}")
+        logger.info(f"[CALENDAR] Webhook URL: {settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL}")
+        logger.info(f"[CALENDAR] Callback URL: {callback_url}")
         background_tasks.add_task(
             _trigger_calendar_creation,
             new_doctor.id,
@@ -216,9 +222,10 @@ def create_doctor(
             current_user.empresa_id,
             callback_url
         )
-        logger.info(f"Queued N8N calendar creation for doctor {new_doctor.id}")
+        logger.info(f"[CALENDAR] Queued N8N calendar creation for doctor {new_doctor.id}")
     else:
-        logger.warning("N8N webhook URL not configured - skipping calendar creation")
+        logger.warning("[CALENDAR] N8N webhook URL not configured - skipping calendar creation")
+        logger.warning(f"[CALENDAR] Set N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL in environment variables")
 
     return DoctorResponse.from_orm(new_doctor)
 
