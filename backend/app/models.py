@@ -180,6 +180,9 @@ class Doctor(Base):
     rating = Column(Float, default=0.0)
     review_count = Column("reviewCount", Integer, default=0)
     years_experience = Column("yearsExperience", Integer)
+    google_calendar_id = Column(String(255), nullable=True)
+    google_calendar_email = Column(String(255), nullable=True)
+    calendar_sync_enabled = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

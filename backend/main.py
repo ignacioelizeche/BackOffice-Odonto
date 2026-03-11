@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import routers
-from app.routers import patients, doctors, appointments, configuration, dashboard, auth, notifications
+from app.routers import patients, doctors, appointments, configuration, dashboard, auth, notifications, calendar
 from app.routers import whatsapp_flow_api
 from app.database import engine, Base
 from app.limiter import limiter
@@ -72,6 +72,7 @@ app.include_router(appointments.router, prefix="/api", tags=["Citas"])
 app.include_router(configuration.router, prefix="/api", tags=["Configuración"])
 app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
 app.include_router(notifications.router, prefix="/api", tags=["Notificaciones"])
+app.include_router(calendar.router, tags=["Calendar"])
 app.include_router(whatsapp_flow_api.router, tags=["WhatsApp Flow"])
 
 # Setup logging

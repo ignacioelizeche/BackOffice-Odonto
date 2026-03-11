@@ -2,7 +2,7 @@
 Doctors router - Endpoints for doctor management
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
@@ -15,6 +15,12 @@ from app.schemas import (
 from app.auth import get_current_user, hash_password, require_doctor_or_admin
 from app.utils.password import generate_random_password
 from app.utils.email_service import email_service
+from app.services.n8n_integration_service import n8n_service
+from app.config import settings
+import logging
+import asyncio
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/doctores", tags=["Doctores"])
 
@@ -108,12 +114,14 @@ def get_doctor(
 @router.post("", response_model=DoctorResponse)
 def create_doctor(
     doctor_data: DoctorCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
     Create a new doctor and corresponding user account - Assigned to current empresa
     Sends welcome email with login credentials
+    Triggers N8N workflow to create Google Calendar for the doctor
     """
     # Check if doctor with same email or license already exists in the same enterprise
     existing_doctor = db.query(Doctor).filter(
@@ -195,9 +203,46 @@ def create_doctor(
 
     if not email_sent:
         # Log warning but don't fail the request - user is created but email failed
-        print(f"[WARNING] Failed to send welcome email to {doctor_data.email}")
+        logger.warning(f"Failed to send welcome email to {doctor_data.email}")
+
+    # Trigger N8N workflow to create Google Calendar for this doctor (in background)
+    if settings.N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL:
+        callback_url = f"{settings.BACKEND_URL}/api/calendar/doctor-calendar-created"
+        background_tasks.add_task(
+            _trigger_calendar_creation,
+            new_doctor.id,
+            new_doctor.name,
+            new_doctor.email,
+            current_user.empresa_id,
+            callback_url
+        )
+        logger.info(f"Queued N8N calendar creation for doctor {new_doctor.id}")
+    else:
+        logger.warning("N8N webhook URL not configured - skipping calendar creation")
 
     return DoctorResponse.from_orm(new_doctor)
+
+
+def _trigger_calendar_creation(
+    doctor_id: int,
+    doctor_name: str,
+    doctor_email: str,
+    empresa_id: int,
+    callback_url: str
+):
+    """Background task to trigger N8N calendar creation"""
+    try:
+        asyncio.run(
+            n8n_service.trigger_create_doctor_calendar(
+                doctor_id=doctor_id,
+                doctor_name=doctor_name,
+                doctor_email=doctor_email,
+                empresa_id=empresa_id,
+                callback_url=callback_url
+            )
+        )
+    except Exception as e:
+        logger.error(f"Failed to trigger N8N calendar creation for doctor {doctor_id}: {str(e)}")
 
 @router.put("/{doctor_id}/horario", response_model=UpdateScheduleResponse)
 def update_doctor_schedule(

@@ -24,6 +24,7 @@ class Settings:
     PORT: int = int(os.getenv("PORT", 8000))
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
+    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
 
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
@@ -63,6 +64,12 @@ class Settings:
     DEFAULT_PAGE: int = 1
     DEFAULT_LIMIT: int = 10
     MAX_LIMIT: int = 100
+
+    # N8N Integration
+    N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL: str = os.getenv(
+        "N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL",
+        ""
+    )
 
     class Config:
         env_file = ".env"
