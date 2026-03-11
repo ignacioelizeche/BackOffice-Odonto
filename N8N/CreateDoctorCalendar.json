@@ -1,0 +1,91 @@
+{
+  "name": "CreateDoctorCalendar",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:8000/api/doctores/{{ $json.doctor_id }}",
+        "method": "GET",
+        "authentication": "none",
+        "simplifyOutput": true
+      },
+      "id": "get-doctor",
+      "name": "Get Doctor Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [300, 300],
+      "dependsOn": ["webhook-trigger"]
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "operation": "create",
+        "summary": "=Calendar - {{ $json.doctor_name }}",
+        "description": "=Appointments for {{ $json.doctor_name }}",
+        "timezone": "America/Argentina/Buenos_Aires"
+      },
+      "id": "create-calendar",
+      "name": "Google Calendar - Create",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 3,
+      "position": [500, 300],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "YOUR_GOOGLE_CREDENTIALS_ID",
+          "name": "Google Calendar"
+        }
+      },
+      "dependsOn": ["get-doctor"]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.webhook_url }}",
+        "method": "POST",
+        "body": "={\n  \"doctor_id\": {{ $('webhook-trigger').item.json.doctor_id }},\n  \"calendar_id\": \"{{ $json.id }}\",\n  \"calendar_email\": \"{{ $json.description }}\"\n}",
+        "contentType": "application/json"
+      },
+      "id": "callback-success",
+      "name": "Callback - Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 200],
+      "dependsOn": ["create-calendar"],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('webhook-trigger').item.json.webhook_url.replace('/doctor-calendar-created', '/doctor-calendar-error') }}",
+        "method": "POST",
+        "body": "={\n  \"doctor_id\": {{ $('webhook-trigger').item.json.doctor_id }},\n  \"error_message\": \"{{ $error.message }}\"\n}",
+        "contentType": "application/json"
+      },
+      "id": "callback-error",
+      "name": "Callback - Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 400],
+      "dependsOn": ["create-calendar"],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {},
+      "id": "return-response",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "dependsOn": ["callback-success"]
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
