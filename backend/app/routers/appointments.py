@@ -231,15 +231,22 @@ def list_appointments(
     # Transform appointments to response format
     response_data = []
     for a in appointments:
+        patient_name = a.paciente.name if a.paciente and a.paciente.name else "Paciente"
+        patient_initials = a.paciente.initials if a.paciente and a.paciente.initials else "--"
+        patient_age = a.paciente.age if a.paciente and a.paciente.age is not None else 0
+        patient_phone = a.paciente.phone if a.paciente and a.paciente.phone else ""
+        doctor_name = a.doctor.name if a.doctor and a.doctor.name else "Doctor"
+        doctor_specialty = a.doctor.specialty if a.doctor and a.doctor.specialty else ""
+
         response_data.append(
             AppointmentResponse(
                 id=a.id,
-                patient=a.paciente.name,
-                patientInitials=a.paciente.initials,
-                patientAge=a.paciente.age,
-                patientPhone=a.paciente.phone,
-                doctor=a.doctor.name,
-                doctorSpecialty=a.doctor.specialty,
+                patient=patient_name,
+                patientInitials=patient_initials,
+                patientAge=patient_age,
+                patientPhone=patient_phone,
+                doctor=doctor_name,
+                doctorSpecialty=doctor_specialty,
                 treatment=a.treatment,
                 date=a.date,
                 time=a.time,
@@ -372,14 +379,21 @@ def get_appointment(
             headers={"X-Error-Code": "FORBIDDEN"}
         )
 
+    patient_name = appointment.paciente.name if appointment.paciente and appointment.paciente.name else "Paciente"
+    patient_initials = appointment.paciente.initials if appointment.paciente and appointment.paciente.initials else "--"
+    patient_age = appointment.paciente.age if appointment.paciente and appointment.paciente.age is not None else 0
+    patient_phone = appointment.paciente.phone if appointment.paciente and appointment.paciente.phone else ""
+    doctor_name = appointment.doctor.name if appointment.doctor and appointment.doctor.name else "Doctor"
+    doctor_specialty = appointment.doctor.specialty if appointment.doctor and appointment.doctor.specialty else ""
+
     return AppointmentResponse(
         id=appointment.id,
-        patient=appointment.paciente.name,
-        patientInitials=appointment.paciente.initials,
-        patientAge=appointment.paciente.age,
-        patientPhone=appointment.paciente.phone,
-        doctor=appointment.doctor.name,
-        doctorSpecialty=appointment.doctor.specialty,
+        patient=patient_name,
+        patientInitials=patient_initials,
+        patientAge=patient_age,
+        patientPhone=patient_phone,
+        doctor=doctor_name,
+        doctorSpecialty=doctor_specialty,
         treatment=appointment.treatment,
         date=appointment.date,
         time=appointment.time,
