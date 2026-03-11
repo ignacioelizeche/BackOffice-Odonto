@@ -63,6 +63,38 @@ def get_initials(name: str) -> str:
         return (parts[0][0] + parts[-1][0]).upper()
     return name[:2].upper()
 
+
+def build_patient_response(patient: Paciente) -> PatientResponse:
+    """Build a resilient patient response from ORM data with legacy null handling."""
+    name = patient.name or "Paciente"
+    initials = patient.initials or get_initials(name)
+    age = patient.age if patient.age is not None else 0
+    gender = patient.gender or "Masculino"
+    last_visit = patient.last_visit or datetime.now().strftime("%Y-%m-%d")
+    doctor = patient.doctor or "Sin asignar"
+    status = patient.status or "nuevo"
+    total_visits = patient.total_visits if patient.total_visits is not None else 0
+    balance = patient.balance if patient.balance is not None else 0.0
+
+    return PatientResponse(
+        id=patient.id,
+        name=name,
+        initials=initials,
+        email=patient.email,
+        phone=patient.phone or "",
+        age=age,
+        gender=gender,
+        lastVisit=last_visit,
+        nextAppt=patient.next_appt,
+        doctor=doctor,
+        status=status,
+        treatments=[],
+        totalVisits=total_visits,
+        balance=balance,
+        teeth=None,
+        empresa_id=patient.empresa_id,
+    )
+
 @router.get("", response_model=PatientsListResponse)
 def list_patients(
     search: Optional[str] = Query(None),
@@ -108,7 +140,7 @@ def list_patients(
     patients = query.offset(offset).limit(limit).all()
 
     return PatientsListResponse(
-        data=[PatientResponse.from_orm(p) for p in patients],
+        data=[build_patient_response(p) for p in patients],
         pagination=PaginationResponse(
             page=page,
             limit=limit,
@@ -222,7 +254,7 @@ def create_patient(
         logger.error(f"Error creating patient assignment notification: {e}")
         # Don't fail the patient creation if notification fails
 
-    return PatientCreateResponse(**PatientResponse.from_orm(db_patient).dict())
+    return PatientCreateResponse(**build_patient_response(db_patient).model_dump())
 
 @router.get("/{patient_id}", response_model=PatientResponse)
 def get_patient(
@@ -277,7 +309,7 @@ def get_patient(
     # Refresh to get all teeth
     db.refresh(patient)
 
-    return PatientResponse.from_orm(patient)
+    return build_patient_response(patient)
 
 @router.put("/{patient_id}", response_model=PatientUpdateResponse)
 def update_patient(
