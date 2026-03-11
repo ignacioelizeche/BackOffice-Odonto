@@ -35,10 +35,15 @@ import {
 import Link from "next/link"
 import { DentalChart } from "./dental-chart"
 import { ToothDetailPanel } from "./tooth-detail-panel"
-import type { Patient, ToothData, ToothRecord } from "./patients-data"
 import { patientsService } from "@/services/patients.service"
+import type { Patient, Tooth as ToothData, TreatmentRecord } from "@/services/patients.service"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+
+type ToothRecord = Omit<TreatmentRecord, "cost"> & {
+  cost: number | string
+  files?: File[]
+}
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -100,13 +105,23 @@ export function PatientDetailContent({ patient: initialPatient, onPatientUpdated
         : parseFloat(String(record.cost).replace(/[$,]/g, "")) || 0
 
       // Call API to save the record
-      await patientsService.addDentalRecord(patient.id, toothNumber, {
+      const response = await patientsService.addDentalRecord(patient.id, toothNumber, {
         treatment: record.treatment,
         doctor: record.doctor,
         notes: record.notes,
         cost: costValue,
         files: record.files,
       })
+
+      const normalizedRecord: TreatmentRecord = {
+        id: response.id,
+        date: response.date,
+        treatment: record.treatment,
+        doctor: record.doctor,
+        notes: record.notes,
+        cost: costValue,
+        attachments: response.attachments,
+      }
 
       // Update local state after successful API call
       setTeeth((prev) =>
@@ -115,7 +130,7 @@ export function PatientDetailContent({ patient: initialPatient, onPatientUpdated
           return {
             ...t,
             status: t.status === "sano" ? "tratado" : t.status,
-            records: [record, ...t.records],
+            records: [normalizedRecord, ...t.records],
           }
         })
       )
@@ -398,7 +413,7 @@ export function PatientDetailContent({ patient: initialPatient, onPatientUpdated
 
             <Select
               value={editForm.gender}
-              onValueChange={(value) => setEditForm((prev) => ({ ...prev, gender: value }))}
+              onValueChange={(value) => setEditForm((prev) => ({ ...prev, gender: value as "Femenino" | "Masculino" }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Genero" />
@@ -411,7 +426,7 @@ export function PatientDetailContent({ patient: initialPatient, onPatientUpdated
 
             <Select
               value={editForm.status}
-              onValueChange={(value) => setEditForm((prev) => ({ ...prev, status: value }))}
+              onValueChange={(value) => setEditForm((prev) => ({ ...prev, status: value as "activo" | "inactivo" | "nuevo" }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Estado" />
