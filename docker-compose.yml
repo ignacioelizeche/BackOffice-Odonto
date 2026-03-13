@@ -34,6 +34,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:40013,http://192.168.2.113:40013}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,192.168.2.113}
+      N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL: ${N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL:-https://rpa.agilapps.com/webhook/ad2d293d-c2b6-42ad-bed2-ce6f76e61989}
     ports:
       - "40012:8000"
     depends_on:
@@ -51,10 +52,10 @@ services:
       context: ./frontend/dental-back-office
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
     container_name: backoffice_frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.113:40012/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "40013:3000"

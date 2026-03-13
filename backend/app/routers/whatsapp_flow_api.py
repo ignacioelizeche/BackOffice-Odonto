@@ -341,12 +341,9 @@ def create_appointment(
         db.refresh(appointment)
 
         # Notify doctor
-        notify_appointment_created(
-            appointment=appointment,
-            db=db,
-            doctor_id=request.doctor_id,
-            empresa_id=request.empresa_id
-        )
+        doctor = db.query(Doctor).filter(Doctor.id == request.doctor_id).first()
+        if doctor:
+            notify_appointment_created(db, appointment, doctor, patient)
 
         return CreateAppointmentResponse(
             success=True,
@@ -481,12 +478,10 @@ def reschedule_appointment(
         db.commit()
 
         # Notify doctor
-        notify_appointment_created(
-            appointment=appointment,
-            db=db,
-            doctor_id=appointment.doctor_id,
-            empresa_id=request.empresa_id
-        )
+        doctor = db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+        patient = db.query(Paciente).filter(Paciente.id == appointment.patient_id).first()
+        if doctor and patient:
+            notify_appointment_created(db, appointment, doctor, patient)
 
         return CreateAppointmentResponse(
             success=True,
