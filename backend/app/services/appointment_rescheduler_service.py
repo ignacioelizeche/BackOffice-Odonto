@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from typing import Tuple, Optional
-from app.models import WhatsAppSession, Cita, AppointmentStatusEnum, Doctor
+from app.models import WhatsAppSession, Cita, AppointmentStatusEnum, Doctor, Paciente
 from app.utils.availability import get_available_slots, validate_appointment_availability
 from app.services.whatsapp_session_service import (
     get_session, update_session, set_phase, set_selected_date, set_selected_time,
@@ -312,15 +312,10 @@ def handle_reagendamiento_time_selection(
         db.commit()
 
         # Notify doctor
-        notify_appointment_created(
-            appointment=appointment,
-            db=db,
-            doctor_id=appointment.doctor_id,
-            empresa_id=empresa_id
-        )
-
-        # Format confirmation message
         doctor = db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+        patient = db.query(Paciente).filter(Paciente.id == appointment.patient_id).first()
+        if doctor and patient:
+            notify_appointment_created(db, appointment, doctor, patient)
         date_display = datetime.strptime(session.selected_date, "%Y-%m-%d").strftime("%d/%m/%Y")
 
         message = "✅ ¡Cita reagendada exitosamente!\n\n"

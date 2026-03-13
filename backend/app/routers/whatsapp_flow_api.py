@@ -525,12 +525,9 @@ def cancel_appointment(
         db.commit()
 
         # Notify doctor
-        notify_appointment_cancelled(
-            appointment=appointment,
-            db=db,
-            doctor_id=appointment.doctor_id,
-            empresa_id=request.empresa_id
-        )
+        doctor = db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+        if doctor:
+            notify_appointment_cancelled(db, appointment, doctor)
 
         return CreateAppointmentResponse(
             success=True,

@@ -299,12 +299,7 @@ def handle_agendamiento_time_selection(
         # Notify doctor
         doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
         if doctor:
-            notify_appointment_created(
-                appointment=appointment,
-                db=db,
-                doctor_id=doctor_id,
-                empresa_id=empresa_id
-            )
+            notify_appointment_created(db, appointment, doctor, patient)
 
         # Update session
         session = set_selected_time(session, selected_time, db)
