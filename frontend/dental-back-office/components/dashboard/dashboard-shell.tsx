@@ -16,9 +16,9 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:block">
+    <div className="flex min-h-screen">
+      {/* Desktop sidebar - fixed positioning */}
+      <div className="hidden lg:block w-64 fixed left-0 top-0 h-screen z-40">
         <SidebarNav />
       </div>
 
@@ -43,15 +43,15 @@ export function DashboardShell({ title, subtitle, children }: DashboardShellProp
       )}
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col lg:ml-64 w-full lg:w-auto">
         <DashboardHeader
           onToggleSidebar={() => setSidebarOpen(true)}
           title={title}
           subtitle={subtitle}
         />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-7xl flex flex-col gap-6">
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 mx-auto max-w-7xl flex flex-col gap-6">
             {children}
           </div>
         </main>

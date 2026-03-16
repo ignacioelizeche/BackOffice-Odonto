@@ -87,7 +87,7 @@ export function SidebarNav() {
     : null
 
   return (
-    <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-screen w-64 flex-col bg-sidebar text-sidebar-foreground overflow-y-auto">
       {/* Clinic Logo and Name Section */}
       <div className="flex items-center gap-3 px-6 py-6">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary overflow-hidden">
