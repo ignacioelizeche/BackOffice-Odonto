@@ -131,6 +131,7 @@ class PatientAppointmentsResponse(BaseModel):
 class CreateAppointmentResponse(BaseModel):
     success: bool
     appointment_id: Optional[int] = None
+    doctor_calendar_id: Optional[str] = None
     message: str
 
 
@@ -348,6 +349,7 @@ def create_appointment(
         return CreateAppointmentResponse(
             success=True,
             appointment_id=appointment.id,
+            doctor_calendar_id=doctor.google_calendar_id if doctor else None,
             message=f"Cita creada exitosamente (ID: {appointment.id})"
         )
 
