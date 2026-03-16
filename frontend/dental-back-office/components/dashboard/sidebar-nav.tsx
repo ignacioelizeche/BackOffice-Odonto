@@ -36,8 +36,7 @@ const adminNavItems = [
 
 const doctorNavItems = [
   ...commonNavItems,
-  // Doctors don't see general configuration, can view their own profile instead
-  // { icon: Settings, label: "Mi Configuracion", href: "/configuracion/personal" },
+  { icon: Settings, label: "Mi Perfil", href: "/mi-perfil" },
 ]
 
 export function SidebarNav() {

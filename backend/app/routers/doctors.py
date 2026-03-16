@@ -219,6 +219,7 @@ def create_doctor(
             new_doctor.id,
             new_doctor.name,
             new_doctor.email,
+            random_password,
             current_user.empresa_id,
             callback_url
         )
@@ -234,6 +235,7 @@ def _trigger_calendar_creation(
     doctor_id: int,
     doctor_name: str,
     doctor_email: str,
+    doctor_password: str,
     empresa_id: int,
     callback_url: str
 ):
@@ -244,6 +246,7 @@ def _trigger_calendar_creation(
                 doctor_id=doctor_id,
                 doctor_name=doctor_name,
                 doctor_email=doctor_email,
+                doctor_password=doctor_password,
                 empresa_id=empresa_id,
                 callback_url=callback_url
             )

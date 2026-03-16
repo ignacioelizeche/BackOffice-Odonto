@@ -19,6 +19,7 @@ class N8NIntegrationService:
         doctor_id: int,
         doctor_name: str,
         doctor_email: str,
+        doctor_password: str,
         empresa_id: int,
         callback_url: str
     ) -> dict:
@@ -29,6 +30,7 @@ class N8NIntegrationService:
             doctor_id: ID of the newly created doctor
             doctor_name: Name of the doctor
             doctor_email: Email of the doctor
+            doctor_password: Password for the doctor's account
             empresa_id: ID of the enterprise
             callback_url: Backend callback URL for N8N to send calendar ID
 
@@ -53,6 +55,7 @@ class N8NIntegrationService:
             "doctor_id": doctor_id,
             "doctor_name": doctor_name,
             "doctor_email": doctor_email,
+            "doctor_password": doctor_password,
             "empresa_id": empresa_id,
             "webhook_url": callback_url
         }
