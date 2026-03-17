@@ -100,7 +100,7 @@ export function SidebarNav() {
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src="//agildent/agildent_logo.png"
+              src="/agildent/agildent_logo.png"
               alt="AgilDent Logo"
               className="h-full w-full object-contain"
             />
