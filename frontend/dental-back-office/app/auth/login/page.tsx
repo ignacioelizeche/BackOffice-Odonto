@@ -51,7 +51,7 @@ export default function LoginPage() {
             <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/agildent_logo.png"
+                src="/agildent/agildent_logo.png"
                 alt="AgilDent Logo"
                 className="h-full w-full object-contain"
               />
