@@ -6,9 +6,11 @@ WORKDIR /app
 # Accept build arguments for API URL and BASE_PATH
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api
 ARG BASE_PATH=/agildent
+ARG NEXT_PUBLIC_BASE_PATH=/agildent
 
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV BASE_PATH=${BASE_PATH}
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 
 # Copiar archivos de configuración primero
 COPY package*.json ./

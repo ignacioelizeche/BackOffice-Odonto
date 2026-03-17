@@ -34,7 +34,8 @@ export default function LoginPage() {
       await new Promise(resolve => setTimeout(resolve, 200))
 
       // Usar window.location en lugar de router.push para forzar recarga del middleware
-      window.location.href = '/'
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/agildent'
+      window.location.href = basePath
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
       console.error('Login error:', err)
