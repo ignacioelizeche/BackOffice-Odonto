@@ -109,7 +109,11 @@ export function CreatePatientForm() {
       // Preparar datos para enviar al backend (excluir status que no es parte de CreatePatientDTO)
       const { status, ...patientData } = values
 
-      const createData: CreatePatientDTO = patientData as CreatePatientDTO
+      // No enviar email si está vacío
+      const createData: CreatePatientDTO = {
+        ...patientData,
+        email: patientData.email?.trim() || undefined,
+      }
 
       console.log("[Create Patient] Enviando datos del paciente:", createData)
       console.log("[Create Patient] Usuario actual:", user)
