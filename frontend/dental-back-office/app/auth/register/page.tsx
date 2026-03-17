@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppRouter } from '@/hooks/useAppRouter'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
-  const router = useAppRouter()
+  const router = useRouter()
 
   useEffect(() => {
     router.replace('/auth/login')
