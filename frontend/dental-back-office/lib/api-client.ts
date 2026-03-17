@@ -24,8 +24,8 @@ function getApiUrl(): string {
   }
   
   // Fallback final para server-side
-  console.log('[API Client] Using localhost fall  back')
-  return 'http://localhost:8000/api'
+  console.log('[API Client] Using localhost fallback')
+  return 'http://localhost:40012/api'
 }
 
 // No se define como constante - se resolverá en tiempo de ejecución

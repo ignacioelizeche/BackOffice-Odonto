@@ -32,11 +32,11 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-backoffice_odonto}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:40013,http://192.168.2.113:40013}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:400184433,http://192.168.2.113:8443}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,192.168.2.113}
       N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL: ${N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL:-https://rpa.agilapps.com/webhook/ad2d293d-c2b6-42ad-bed2-ce6f76e61989}
     ports:
-      - "40012:8000"
+      - "8080:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -52,15 +52,15 @@ services:
       context: ./frontend/dental-back-office
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
         BASE_PATH: ${BASE_PATH:-/agildent}
     container_name: backoffice_frontend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
       BASE_PATH: ${BASE_PATH:-/agildent}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "40013:3000"
+      - "8443:3000"
     depends_on:
       - backend
     networks:
