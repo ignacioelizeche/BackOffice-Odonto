@@ -32,7 +32,7 @@ services:
       DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-backoffice_odonto}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://192.168.2.56:400184433,http://192.168.2.56:8443}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://192.168.2.56,http://192.168.2.56:80,http://192.168.2.56:3000,http://192.168.2.56:8443,http://localhost:3000,http://localhost:8443}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,192.168.2.56}
       N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL: ${N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL:-https://rpa.agilapps.com/webhook/ad2d293d-c2b6-42ad-bed2-ce6f76e61989}
     ports:
@@ -62,7 +62,7 @@ services:
       NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-/agildent}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "3000:3000"
+      - "8443:3000"
     depends_on:
       - backend
     networks:
