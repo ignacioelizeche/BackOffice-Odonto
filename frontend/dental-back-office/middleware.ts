@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const BASE_PATH = process.env.BASE_PATH || ''
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // Remove basePath from pathname for comparison
+  const pathWithoutBase = pathname.replace(new RegExp(`^${BASE_PATH}`), '') || '/'
 
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/auth/login']
 
   // Verificar si la ruta actual es pública
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some(route => pathWithoutBase.startsWith(route))
 
   // Si es una ruta pública, permitir el acceso
   if (isPublicRoute) {
@@ -20,7 +25,8 @@ export function middleware(request: NextRequest) {
 
   // Si no hay token y la ruta no es pública, redirigir a login
   if (!token) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    const loginUrl = new URL(`${BASE_PATH}/auth/login`, request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
