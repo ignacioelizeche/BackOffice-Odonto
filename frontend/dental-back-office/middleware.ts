@@ -6,10 +6,13 @@ const BASE_PATH = '/agildent'
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // Si la ruta no empieza con /agildent, ignorar
+  if (!pathname.startsWith(BASE_PATH)) {
+    return NextResponse.next()
+  }
+
   // Remove basePath from pathname for comparison
-  const pathWithoutBase = pathname.startsWith(BASE_PATH)
-    ? pathname.slice(BASE_PATH.length) || '/'
-    : pathname
+  const pathWithoutBase = pathname.slice(BASE_PATH.length) || '/'
 
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/auth/login', '/auth/register']
@@ -27,7 +30,12 @@ export function middleware(request: NextRequest) {
 
   // Si no hay token y la ruta no es pública, redirigir a login
   if (!token) {
-    const loginUrl = new URL(`${BASE_PATH}/auth/login`, request.url)
+    // Usar headers de X-Forwarded-* para el proxy reverso
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'http'
+    const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost'
+
+    // Construir URL de redirección con el host y protocolo correctos
+    const loginUrl = `${forwardedProto}://${forwardedHost}${BASE_PATH}/auth/login`
     return NextResponse.redirect(loginUrl)
   }
 
@@ -36,7 +44,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Proteger rutas bajo /agildent excepto assets
-    '/agildent/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg).*)',
+    // Aplicar a todas las rutas excepto assets estáticos
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg).*)',
   ],
 }
