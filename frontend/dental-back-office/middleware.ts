@@ -25,7 +25,8 @@ export function middleware(request: NextRequest) {
 
   // Si no hay token y la ruta no es pública, redirigir a login
   if (!token) {
-    const loginUrl = new URL(`${BASE_PATH}/auth/login`, request.url)
+    const loginUrl = new URL(request.url)
+    loginUrl.pathname = `${BASE_PATH}/auth/login`
     return NextResponse.redirect(loginUrl)
   }
 

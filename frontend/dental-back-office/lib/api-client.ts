@@ -15,13 +15,16 @@ function getApiUrl(): string {
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol
     const host = window.location.hostname
-    const fallbackUrl = `${protocol}//${host}:8000/api`
+    const port = window.location.port
+    // En producción usa puerto 443 (https), en desarrollo usa 40012 (docker-compose)
+    const portStr = port && port !== '443' && port !== '80' ? `:${port}` : ''
+    const fallbackUrl = `${protocol}//${host}${portStr}/agildent/api`
     console.log('[API Client] Using fallback URL:', fallbackUrl)
     return fallbackUrl
   }
   
   // Fallback final para server-side
-  console.log('[API Client] Using localhost fallback')
+  console.log('[API Client] Using localhost fall  back')
   return 'http://localhost:8000/api'
 }
 

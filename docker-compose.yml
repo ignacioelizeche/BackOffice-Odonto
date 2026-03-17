@@ -53,9 +53,11 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
+        BASE_PATH: ${BASE_PATH:-/agildent}
     container_name: backoffice_frontend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:40012/api}
+      BASE_PATH: ${BASE_PATH:-/agildent}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "40013:3000"

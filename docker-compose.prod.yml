@@ -69,9 +69,11 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        BASE_PATH: ${BASE_PATH:-/agildent}
     container_name: backoffice_frontend_prod
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      BASE_PATH: ${BASE_PATH:-/agildent}
       NODE_ENV: production
     expose:
       - "3000"

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useAppRouter } from '@/hooks/useAppRouter'
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { StatCards } from "@/components/dashboard/stat-cards"
 import { AppointmentsTable } from "@/components/dashboard/appointments-table"
@@ -11,7 +11,7 @@ import { WeeklyChart } from "@/components/dashboard/weekly-chart"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function Page() {
-  const router = useRouter()
+  const router = useAppRouter()
   const { isLoading, isAuthenticated, user } = useAuth()
 
   useEffect(() => {

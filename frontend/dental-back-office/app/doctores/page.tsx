@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useAppRouter } from "@/hooks/useAppRouter"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DoctorsContent } from "@/components/doctores/doctors-content"
 import { DoctorDetailView } from "@/components/doctores/doctor-detail-view"
@@ -12,7 +12,7 @@ import { doctorsService, type Doctor } from "@/services/doctors.service"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function DoctoresPage() {
-  const router = useRouter()
+  const router = useAppRouter()
   const { user, isLoading } = useAuth()
   const [doctorData, setDoctorData] = useState<Doctor | null>(null)
   const [isLoadingDoctor, setIsLoadingDoctor] = useState(false)

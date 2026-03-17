@@ -89,7 +89,7 @@ export const authService = {
       sessionStorage.setItem('authToken', token)
       // Guardar en cookies (para el middleware del servidor)
       const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-      document.cookie = `authToken=${token}; path=/; SameSite=Lax${secure}`
+      document.cookie = `authToken=${token}; path=/agildent; SameSite=Lax${secure}`
     }
   },
 
@@ -101,7 +101,7 @@ export const authService = {
       sessionStorage.removeItem('authToken')
       sessionStorage.removeItem('authUser')
       // Limpiar cookies también
-      document.cookie = 'authToken=; path=/; max-age=0'
+      document.cookie = 'authToken=; path=/agildent; max-age=0'
     }
   },
 
