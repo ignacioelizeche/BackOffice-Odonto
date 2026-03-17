@@ -111,7 +111,11 @@ export function CreatePatientForm() {
 
       // No enviar email si está vacío
       const createData: CreatePatientDTO = {
-        ...patientData,
+        name: patientData.name,
+        phone: patientData.phone,
+        age: patientData.age,
+        gender: patientData.gender as "Masculino" | "Femenino",
+        doctor: patientData.doctor,
         email: patientData.email?.trim() || undefined,
       }
 
