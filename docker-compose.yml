@@ -59,25 +59,9 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.2.56:8080/api}
       BASE_PATH: ${BASE_PATH:-/agildent}
       NODE_ENV: ${NODE_ENV:-development}
-    expose:
-      - "3000"
-    depends_on:
-      - backend
-    networks:
-      - backoffice_network
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: backoffice_nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "80:80"
-      - "443:443"
+      - "8443:3000"
     depends_on:
-      - frontend
       - backend
     networks:
       - backoffice_network
