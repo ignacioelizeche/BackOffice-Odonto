@@ -1,6 +1,6 @@
 import { useRouter as useNextRouter } from 'next/navigation'
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || ''
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '/agildent'
 
 /**
  * Hook que envuelve useRouter de Next.js para automáticamente aplicar basePath

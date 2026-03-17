@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const BASE_PATH = process.env.BASE_PATH || ''
+const BASE_PATH = '/agildent'
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Remove basePath from pathname for comparison
-  const pathWithoutBase = pathname.replace(new RegExp(`^${BASE_PATH}`), '') || '/'
+  const pathWithoutBase = pathname.startsWith(BASE_PATH)
+    ? pathname.slice(BASE_PATH.length) || '/'
+    : pathname
 
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/auth/login']
+  const publicRoutes = ['/auth/login', '/auth/register']
 
   // Verificar si la ruta actual es pública
   const isPublicRoute = publicRoutes.some(route => pathWithoutBase.startsWith(route))
@@ -25,8 +27,7 @@ export function middleware(request: NextRequest) {
 
   // Si no hay token y la ruta no es pública, redirigir a login
   if (!token) {
-    const loginUrl = new URL(request.url)
-    loginUrl.pathname = `${BASE_PATH}/auth/login`
+    const loginUrl = new URL(`${BASE_PATH}/auth/login`, request.url)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -35,7 +36,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Proteger todas las rutas excepto:
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg).*)',
+    // Proteger rutas bajo /agildent excepto assets
+    '/agildent/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg).*)',
   ],
 }

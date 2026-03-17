@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || ''
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '/agildent'
 
 /**
  * Hook personalizado que envuelve useRouter y aplica automáticamente el basePath
