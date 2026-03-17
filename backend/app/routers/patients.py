@@ -242,8 +242,8 @@ def create_patient(
         gender=patient.gender,
         doctor=doctor_name,
         status="nuevo",
-        lastVisit=datetime.now().strftime("%Y-%m-%d"),
-        totalVisits=0,
+        last_visit=datetime.now().strftime("%Y-%m-%d"),
+        total_visits=0,
         balance=0.0,
         empresa_id=current_user.empresa_id
     )
