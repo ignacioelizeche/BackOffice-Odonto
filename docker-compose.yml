@@ -60,7 +60,7 @@ services:
       BASE_PATH: ${BASE_PATH:-/agildent}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "8443:3000"
+      - "80:3000"
     depends_on:
       - backend
     networks:
