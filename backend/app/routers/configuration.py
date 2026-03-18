@@ -100,11 +100,11 @@ def get_clinic_config(
         print(f"[GET CLINICA] No config found, returning defaults")
         return ClinicConfigResponse(
             name="DentalCare Pro",
-            rfc="DCP-210415-AB3",
+            rfc="",
             phone="+52 55 1234 5678",
             email="contacto@dentalcarepro.com",
             website=None,
-            license_number="LS-2021-CDMX-04521",
+            license_number="",
             address="Av. Insurgentes Sur 1234, Col. Del Valle...",
             specialties=["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
             logo_url=None
@@ -119,11 +119,11 @@ def get_clinic_config(
     # Build response with actual config data, using defaults for NULL fields
     response = ClinicConfigResponse(
         name=config.name or "DentalCare Pro",
-        rfc=config.rfc or "DCP-210415-AB3",
+        rfc=config.rfc or "",
         phone=config.phone or "+52 55 1234 5678",
         email=config.email or "contacto@dentalcarepro.com",
         website=config.website,
-        license_number=config.license_number or "LS-2021-CDMX-04521",
+        license_number=config.license_number or "",
         address=config.address or "Av. Insurgentes Sur 1234, Col. Del Valle...",
         specialties=config.specialties or ["Odontologia General", "Cirugia Oral", "Ortodoncia", "Endodoncia"],
         logo_url=config.logo_url
