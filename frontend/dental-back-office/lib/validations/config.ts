@@ -12,12 +12,11 @@ export const clinicConfigSchema = z.object({
     .max(100, "El nombre no puede exceder 100 caracteres"),
   rfc: z
     .string()
-    .regex(
-      /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/,
+    .refine(
+      (val) => val === "" || /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(val),
       "RFC inválido. Formato: XXX000000XXX"
     )
-    .optional()
-    .or(z.literal("")),
+    .optional(),
   phone: z
     .string()
     .regex(
