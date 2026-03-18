@@ -316,7 +316,7 @@ export function ClinicaTab() {
               {/* RFC field */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="rfc" className="text-card-foreground">
-                  RFC {form.formState.errors.rfc && <span className="text-destructive">*</span>}
+                  RFC (Opcional)
                 </Label>
                 <Input
                   id="rfc"
@@ -385,7 +385,7 @@ export function ClinicaTab() {
               {/* License field */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="licenseNumber" className="text-card-foreground">
-                  Licencia Sanitaria {form.formState.errors.licenseNumber && <span className="text-destructive">*</span>}
+                  Licencia Sanitaria (Opcional)
                 </Label>
                 <Input
                   id="licenseNumber"
