@@ -44,17 +44,6 @@ const treatments = [
   "Cirugia menor",
 ]
 
-const durations = [
-  "15 min",
-  "20 min",
-  "30 min",
-  "40 min",
-  "45 min",
-  "60 min",
-  "90 min",
-  "120 min",
-]
-
 interface AppointmentFormProps {
   mode: "crear" | "editar"
   initialData?: Appointment
@@ -91,6 +80,8 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([])
   const [loadingAvailability, setLoadingAvailability] = useState(false)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+
+  const selectedDoctor = doctors.find((d) => d.id === Number(doctorId))
 
   // Cargar pacientes y doctores
   useEffect(() => {
@@ -129,6 +120,13 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
     }
     loadData()
   }, [isDoctor, user?.name])
+
+  // Auto-configurar duración preferida cuando se selecciona un doctor
+  useEffect(() => {
+    if (selectedDoctor && selectedDoctor.preferredSlotDuration && !duration) {
+      setDuration(`${selectedDoctor.preferredSlotDuration} min`)
+    }
+  }, [doctorId, selectedDoctor])
 
   // Pre-seleccionar paciente si viene de URL
   useEffect(() => {
@@ -196,7 +194,8 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
     return ""
   }
 
-  const selectedDoctor = doctors.find((d) => d.id === Number(doctorId))
+  // selectedDoctor se calcula ahora en el bloque de duración dinámica arriba
+  // const selectedDoctor = doctors.find((d) => d.id === Number(doctorId))
 
   async function handleSave() {
     try {
@@ -412,24 +411,36 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
                     initialTime={mode === "editar" ? initialData?.time : undefined}
                     initialDate={mode === "editar" ? formatDateForInput(initialData?.date ?? "") : undefined}
                     currentDate={date}
+                    doctor={selectedDoctor}
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="duration" className="text-sm font-medium text-foreground">
-                  Duracion <span className="text-destructive">*</span>
+                  Duración (minutos) <span className="text-destructive">*</span>
+                  {selectedDoctor && selectedDoctor.preferredSlotDuration && (
+                    <span className="text-xs text-primary ml-2">
+                      (Preferida: {selectedDoctor.preferredSlotDuration} min)
+                    </span>
+                  )}
                 </Label>
-                <Select value={duration} onValueChange={setDuration}>
-                  <SelectTrigger id="duration" className="border-border/50 bg-background">
-                    <SelectValue placeholder="Seleccionar duración" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {durations.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="duration"
+                  type="number"
+                  min={selectedDoctor?.minimumSlotDuration || 5}
+                  max="180"
+                  step="1"
+                  placeholder={selectedDoctor ? `${selectedDoctor.preferredSlotDuration || 30}` : "30"}
+                  value={duration ? duration.replace(' min', '') : ''}
+                  onChange={(e) => setDuration(e.target.value ? `${e.target.value} min` : '')}
+                  className="border-border/50 bg-background"
+                />
+                {selectedDoctor && (
+                  <p className="text-xs text-muted-foreground">
+                    Este doctor acepta turnos desde {selectedDoctor.minimumSlotDuration || 5} minutos hasta 180 minutos
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
