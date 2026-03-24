@@ -61,9 +61,12 @@ export function AvailabilityCalendar({ doctor, onDateClick, selectedDate, refres
     loadCustomAvailability()
   }, [doctor.id, currentDate, refreshKey])
 
-  // Helper function to format date as YYYY-MM-DD
+  // Helper function to format date as YYYY-MM-DD (local timezone)
   function formatDate(date: Date): string {
-    return date.toISOString().split('T')[0]
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 
   // Check if doctor works on this day of week (based on weekly schedule)
@@ -272,7 +275,8 @@ export function AvailabilityCalendar({ doctor, onDateClick, selectedDate, refres
               {calendarDays.map((day) => {
                 const dayStatus = getDayStatus(day)
                 const isSelected = selectedDate === day.date
-                const dayNumber = new Date(day.date).getDate()
+                const [year, month, dayStr] = day.date.split('-')
+                const dayNumber = parseInt(dayStr)
 
                 return (
                   <Button
