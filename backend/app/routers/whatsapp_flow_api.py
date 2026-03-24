@@ -286,12 +286,24 @@ def create_appointment(
     Called by N8N during agendamiento phase 4.
     """
     try:
+        # Get doctor to validate exists and get preferred slot duration
+        doctor = db.query(Doctor).filter(Doctor.id == request.doctor_id).first()
+        if not doctor:
+            return CreateAppointmentResponse(
+                success=False,
+                message="Doctor no encontrado"
+            )
+
+        # Use doctor's preferred duration, default to 30 if not set
+        duration_minutes = doctor.preferred_slot_duration or 30
+        duration = f"{duration_minutes} min"
+
         # Validate availability
         is_available, reason = validate_appointment_availability(
             doctor_id=request.doctor_id,
             date=request.date,
             time=request.time,
-            duration="30 min",
+            duration=duration,
             db=db
         )
 
@@ -331,7 +343,7 @@ def create_appointment(
             doctor_id=request.doctor_id,
             date=request.date,
             time=request.time,
-            duration="30 min",
+            duration=duration,
             status=AppointmentStatusEnum.pendiente,
             treatment="Consulta General",
             cost=0.0
@@ -341,8 +353,7 @@ def create_appointment(
         db.commit()
         db.refresh(appointment)
 
-        # Notify doctor
-        doctor = db.query(Doctor).filter(Doctor.id == request.doctor_id).first()
+        # Notify doctor (using doctor object we already retrieved)
         if doctor:
             notify_appointment_created(db, appointment, doctor, patient)
 
@@ -458,12 +469,24 @@ def reschedule_appointment(
                 message="Cita no encontrada"
             )
 
+        # Get doctor to get preferred slot duration
+        doctor = db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+        if not doctor:
+            return CreateAppointmentResponse(
+                success=False,
+                message="Doctor no encontrado"
+            )
+
+        # Use doctor's preferred duration, default to 30 if not set
+        duration_minutes = doctor.preferred_slot_duration or 30
+        duration = f"{duration_minutes} min"
+
         # Validate new availability (exclude current appointment)
         is_available, reason = validate_appointment_availability(
             doctor_id=appointment.doctor_id,
             date=request.new_date,
             time=request.new_time,
-            duration="30 min",
+            duration=duration,
             db=db,
             exclude_appointment_id=request.appointment_id
         )
@@ -479,8 +502,7 @@ def reschedule_appointment(
         appointment.time = request.new_time
         db.commit()
 
-        # Notify doctor
-        doctor = db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+        # Notify doctor (using doctor object we already retrieved)
         patient = db.query(Paciente).filter(Paciente.id == appointment.patient_id).first()
         if doctor and patient:
             notify_appointment_created(db, appointment, doctor, patient)
@@ -488,6 +510,7 @@ def reschedule_appointment(
         return CreateAppointmentResponse(
             success=True,
             appointment_id=appointment.id,
+            doctor_calendar_id=doctor.google_calendar_id if doctor else None,
             message="Cita reagendada exitosamente"
         )
 

@@ -75,6 +75,7 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Nuevos estados para disponibilidad
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([])
@@ -201,6 +202,19 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
     try {
       setSaving(true)
       setSaveError(null)
+      setValidationError(null)
+
+      // Validar duración mínima
+      const durationNum = Number(duration?.replace(' min', ''))
+      const minDuration = selectedDoctor?.minimumSlotDuration || 5
+
+      if (!durationNum || durationNum < minDuration) {
+        throw new Error(`La duración mínima para este doctor es ${minDuration} minutos`)
+      }
+
+      if (durationNum > 180) {
+        throw new Error("La duración máxima es 180 minutos")
+      }
 
       const costNum = Number(cost) || 0
 
@@ -235,7 +249,9 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
       }, 1200)
     } catch (err) {
       console.error("Error al guardar cita:", err)
-      setSaveError("Error al guardar la cita. Por favor intenta de nuevo.")
+      const errorMessage = err instanceof Error ? err.message : "Error al guardar la cita. Por favor intenta de nuevo."
+      setValidationError(errorMessage)
+      setSaveError(errorMessage)
     } finally {
       setSaving(false)
     }
@@ -436,6 +452,12 @@ export function AppointmentForm({ mode, initialData }: AppointmentFormProps) {
                   onChange={(e) => setDuration(e.target.value ? `${e.target.value} min` : '')}
                   className="border-border/50 bg-background"
                 />
+                {validationError && duration && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {validationError}
+                  </p>
+                )}
                 {selectedDoctor && (
                   <p className="text-xs text-muted-foreground">
                     Este doctor acepta turnos desde {selectedDoctor.minimumSlotDuration || 5} minutos hasta 180 minutos

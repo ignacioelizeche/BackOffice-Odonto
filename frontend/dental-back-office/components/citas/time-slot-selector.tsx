@@ -1,9 +1,10 @@
 "use client"
 
-import { Loader, Clock } from "lucide-react"
+import { Loader, Clock, User } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { AvailableSlot } from "@/services/appointments.service"
+import type { Doctor } from "@/services/doctors.service"
 
 interface TimeSlotSelectorProps {
   slots: AvailableSlot[]
@@ -13,6 +14,7 @@ interface TimeSlotSelectorProps {
   initialTime?: string
   initialDate?: string
   currentDate?: string
+  doctor?: Doctor  // Información del doctor para mostrar contexto de slots
 }
 
 export function TimeSlotSelector({
@@ -23,6 +25,7 @@ export function TimeSlotSelector({
   initialTime,
   initialDate,
   currentDate,
+  doctor,
 }: TimeSlotSelectorProps) {
   // Solo mostrar initialTime con estilo especial si estamos en la misma fecha original
   const showInitialTimeStyle = initialDate && currentDate && initialDate === currentDate
@@ -112,6 +115,17 @@ export function TimeSlotSelector({
           <Clock className="h-5 w-5 text-primary flex-shrink-0" />
           <span>Seleccionar Hora</span>
         </CardTitle>
+        {doctor && (doctor.preferredSlotDuration || doctor.minimumSlotDuration) && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <User className="h-3 w-3" />
+            <span>
+              Turnos de {doctor.preferredSlotDuration || 30} min
+              {doctor.minimumSlotDuration && doctor.minimumSlotDuration !== doctor.preferredSlotDuration &&
+                ` (mín: ${doctor.minimumSlotDuration} min)`
+              }
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="pb-2">
         {loading ? (

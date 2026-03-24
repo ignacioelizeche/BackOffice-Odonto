@@ -4,13 +4,15 @@ Doctors router - Endpoints for doctor management
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.database import get_db
-from app.models import Doctor, HorarioDoctor, Usuario
+from app.models import Doctor, HorarioDoctor, Usuario, DoctorCustomAvailability
 from app.schemas import (
     DoctorResponse, DoctorsListResponse, UpdateScheduleRequest,
     UpdateScheduleResponse, WorkDayBase, DoctorCreate, UpdateDoctorStatusRequest,
-    UpdateDoctorStatusResponse
+    UpdateDoctorStatusResponse, CustomAvailabilityCreate, CustomAvailabilityUpdate,
+    CustomAvailabilityResponse, CustomAvailabilityListResponse,
+    UpdateDoctorSlotDurationRequest, UpdateDoctorSlotDurationResponse
 )
 from app.auth import get_current_user, hash_password, require_doctor_or_admin
 from app.utils.password import generate_random_password
@@ -19,6 +21,7 @@ from app.services.n8n_integration_service import n8n_service
 from app.config import settings
 import logging
 import asyncio
+from datetime import datetime, date
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +46,21 @@ def options_doctor_schedule(doctor_id: int):
 @router.options("/{doctor_id}/status")
 def options_doctor_status(doctor_id: int):
     """Handle CORS preflight for doctor status"""
+    return {}
+
+@router.options("/{doctor_id}/availability/custom")
+def options_doctor_custom_availability(doctor_id: int):
+    """Handle CORS preflight for doctor custom availability"""
+    return {}
+
+@router.options("/{doctor_id}/availability/custom/{date}")
+def options_doctor_custom_availability_date(doctor_id: int, date: str):
+    """Handle CORS preflight for doctor custom availability by date"""
+    return {}
+
+@router.options("/{doctor_id}/slot-duration")
+def options_doctor_slot_duration(doctor_id: int):
+    """Handle CORS preflight for doctor slot duration"""
     return {}
 
 
@@ -347,4 +365,392 @@ def update_doctor_status(
         id=doctor.id,
         status=doctor.status,
         message="Estado actualizado exitosamente"
+    )
+
+# ============= CUSTOM AVAILABILITY ENDPOINTS =============
+
+@router.post("/{doctor_id}/availability/custom", response_model=CustomAvailabilityResponse)
+def create_custom_availability(
+    doctor_id: int,
+    availability_data: CustomAvailabilityCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Set custom availability for a doctor on a specific date
+    Requires admin role or doctor managing own schedule
+    """
+    # Check if doctor exists and belongs to current user's enterprise
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor no encontrado"
+        )
+
+    if doctor.empresa_id != current_user.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para acceder a este doctor"
+        )
+
+    # Check authorization: Doctor can only manage their own schedule
+    if current_user.role == "Doctor" and current_user.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes gestionar tu propio horario"
+        )
+
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(availability_data.date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato de fecha inválido. Use YYYY-MM-DD"
+        )
+
+    # Check if custom availability already exists for this date
+    existing = db.query(DoctorCustomAvailability).filter(
+        (DoctorCustomAvailability.doctor_id == doctor_id) &
+        (DoctorCustomAvailability.date == date_obj)
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ya existe disponibilidad personalizada para esta fecha"
+        )
+
+    # Parse time fields if provided
+    start_time = None
+    end_time = None
+    break_start = None
+    break_end = None
+
+    if availability_data.start_time:
+        try:
+            start_time = datetime.strptime(availability_data.start_time, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de inicio inválido. Use HH:MM"
+            )
+
+    if availability_data.end_time:
+        try:
+            end_time = datetime.strptime(availability_data.end_time, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de fin inválido. Use HH:MM"
+            )
+
+    if availability_data.break_start:
+        try:
+            break_start = datetime.strptime(availability_data.break_start, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de inicio de descanso inválido. Use HH:MM"
+            )
+
+    if availability_data.break_end:
+        try:
+            break_end = datetime.strptime(availability_data.break_end, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de fin de descanso inválido. Use HH:MM"
+            )
+
+    # Create custom availability
+    custom_availability = DoctorCustomAvailability(
+        doctor_id=doctor_id,
+        empresa_id=current_user.empresa_id,
+        date=date_obj,
+        available=availability_data.available,
+        start_time=start_time,
+        end_time=end_time,
+        break_start=break_start,
+        break_end=break_end,
+        notes=availability_data.notes
+    )
+
+    db.add(custom_availability)
+    db.commit()
+    db.refresh(custom_availability)
+
+    return CustomAvailabilityResponse.from_orm(custom_availability)
+
+@router.get("/{doctor_id}/availability/custom", response_model=CustomAvailabilityListResponse)
+def get_custom_availability(
+    doctor_id: int,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get doctor's custom availability for a date range
+    If no dates provided, returns next 30 days
+    """
+    # Check if doctor exists and belongs to current user's enterprise
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor no encontrado"
+        )
+
+    if doctor.empresa_id != current_user.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para acceder a este doctor"
+        )
+
+    # Check authorization: Doctor can only view their own schedule
+    if current_user.role == "Doctor" and current_user.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes ver tu propio horario"
+        )
+
+    # Parse date range
+    if start_date:
+        try:
+            start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de fecha de inicio inválido. Use YYYY-MM-DD"
+            )
+    else:
+        start_date_obj = date.today()
+
+    if end_date:
+        try:
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de fecha de fin inválido. Use YYYY-MM-DD"
+            )
+    else:
+        from datetime import timedelta
+        end_date_obj = start_date_obj + timedelta(days=30)
+
+    # Query custom availability
+    query = db.query(DoctorCustomAvailability).filter(
+        (DoctorCustomAvailability.doctor_id == doctor_id) &
+        (DoctorCustomAvailability.date >= start_date_obj) &
+        (DoctorCustomAvailability.date <= end_date_obj)
+    ).order_by(DoctorCustomAvailability.date)
+
+    custom_availabilities = query.all()
+
+    return CustomAvailabilityListResponse(
+        data=[CustomAvailabilityResponse.from_orm(ca) for ca in custom_availabilities]
+    )
+
+@router.put("/{doctor_id}/availability/custom/{date}", response_model=CustomAvailabilityResponse)
+def update_custom_availability(
+    doctor_id: int,
+    date: str,
+    availability_data: CustomAvailabilityUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Update custom availability for a doctor on a specific date
+    """
+    # Check if doctor exists and belongs to current user's enterprise
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor no encontrado"
+        )
+
+    if doctor.empresa_id != current_user.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para acceder a este doctor"
+        )
+
+    # Check authorization
+    if current_user.role == "Doctor" and current_user.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes gestionar tu propio horario"
+        )
+
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato de fecha inválido. Use YYYY-MM-DD"
+        )
+
+    # Find existing custom availability
+    custom_availability = db.query(DoctorCustomAvailability).filter(
+        (DoctorCustomAvailability.doctor_id == doctor_id) &
+        (DoctorCustomAvailability.date == date_obj)
+    ).first()
+
+    if not custom_availability:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No existe disponibilidad personalizada para esta fecha"
+        )
+
+    # Parse and validate time fields
+    if availability_data.start_time:
+        try:
+            custom_availability.start_time = datetime.strptime(availability_data.start_time, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de inicio inválido. Use HH:MM"
+            )
+
+    if availability_data.end_time:
+        try:
+            custom_availability.end_time = datetime.strptime(availability_data.end_time, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de fin inválido. Use HH:MM"
+            )
+
+    if availability_data.break_start:
+        try:
+            custom_availability.break_start = datetime.strptime(availability_data.break_start, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de inicio de descanso inválido. Use HH:MM"
+            )
+
+    if availability_data.break_end:
+        try:
+            custom_availability.break_end = datetime.strptime(availability_data.break_end, "%H:%M").time()
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Formato de hora de fin de descanso inválido. Use HH:MM"
+            )
+
+    # Update fields
+    custom_availability.available = availability_data.available
+    custom_availability.notes = availability_data.notes
+    custom_availability.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(custom_availability)
+
+    return CustomAvailabilityResponse.from_orm(custom_availability)
+
+@router.delete("/{doctor_id}/availability/custom/{date}")
+def delete_custom_availability(
+    doctor_id: int,
+    date: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Remove custom availability for a doctor on a specific date
+    This will return the doctor to their weekly schedule pattern for this date
+    """
+    # Check if doctor exists and belongs to current user's enterprise
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor no encontrado"
+        )
+
+    if doctor.empresa_id != current_user.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para acceder a este doctor"
+        )
+
+    # Check authorization
+    if current_user.role == "Doctor" and current_user.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes gestionar tu propio horario"
+        )
+
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Formato de fecha inválido. Use YYYY-MM-DD"
+        )
+
+    # Find and delete custom availability
+    custom_availability = db.query(DoctorCustomAvailability).filter(
+        (DoctorCustomAvailability.doctor_id == doctor_id) &
+        (DoctorCustomAvailability.date == date_obj)
+    ).first()
+
+    if not custom_availability:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No existe disponibilidad personalizada para esta fecha"
+        )
+
+    db.delete(custom_availability)
+    db.commit()
+
+    return {"message": "Disponibilidad personalizada eliminada exitosamente"}
+
+@router.put("/{doctor_id}/slot-duration", response_model=UpdateDoctorSlotDurationResponse)
+def update_doctor_slot_duration(
+    doctor_id: int,
+    duration_data: UpdateDoctorSlotDurationRequest,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Update doctor's preferred appointment slot durations
+    Allows configuring 10-15 minute intervals instead of global default
+    """
+    # Check if doctor exists and belongs to current user's enterprise
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if not doctor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor no encontrado"
+        )
+
+    if doctor.empresa_id != current_user.empresa_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso para acceder a este doctor"
+        )
+
+    # Check authorization: Doctor can only update their own settings
+    if current_user.role == "Doctor" and current_user.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes actualizar tus propias configuraciones"
+        )
+
+    # Update slot duration preferences
+    doctor.preferred_slot_duration = duration_data.preferred_slot_duration
+    doctor.minimum_slot_duration = duration_data.minimum_slot_duration
+
+    db.commit()
+
+    return UpdateDoctorSlotDurationResponse(
+        id=doctor.id,
+        preferred_slot_duration=doctor.preferred_slot_duration,
+        minimum_slot_duration=doctor.minimum_slot_duration
     )

@@ -2,10 +2,10 @@
 Appointment availability utilities
 """
 
-from datetime import datetime, timedelta, time
-from typing import List, Tuple, Optional
+from datetime import datetime, timedelta, time, date
+from typing import List, Tuple, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from app.models import Cita, HorarioDoctor, AppointmentStatusEnum
+from app.models import Cita, HorarioDoctor, AppointmentStatusEnum, DoctorCustomAvailability, Doctor
 
 
 def parse_duration_to_minutes(duration_str: str) -> int:
@@ -95,13 +95,13 @@ def get_date_name(date_str: str) -> str:
         return ""
 
 
-def get_doctor_schedule_for_date(
+def get_custom_availability_for_date(
     doctor_id: int,
     date_str: str,
     db: Session
-) -> Optional[HorarioDoctor]:
+) -> Optional[DoctorCustomAvailability]:
     """
-    Get doctor's schedule for a specific date
+    Get doctor's custom availability for a specific date
 
     Args:
         doctor_id: Doctor ID
@@ -109,8 +109,81 @@ def get_doctor_schedule_for_date(
         db: Database session
 
     Returns:
-        HorarioDoctor object or None if doctor doesn't have schedule for that day
+        DoctorCustomAvailability object or None if no custom availability set
     """
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except:
+        return None
+
+    custom_avail = db.query(DoctorCustomAvailability).filter(
+        (DoctorCustomAvailability.doctor_id == doctor_id) &
+        (DoctorCustomAvailability.date == date_obj)
+    ).first()
+
+    return custom_avail
+
+
+def get_doctor_slot_duration(doctor_id: int, db: Session) -> int:
+    """
+    Get doctor's preferred slot duration
+
+    Args:
+        doctor_id: Doctor ID
+        db: Database session
+
+    Returns:
+        Slot duration in minutes (defaults to 30 if not set)
+    """
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if doctor and doctor.preferred_slot_duration:
+        return doctor.preferred_slot_duration
+    return 30  # default
+
+
+def get_doctor_schedule_for_date(
+    doctor_id: int,
+    date_str: str,
+    db: Session
+) -> Optional[Dict[str, Any]]:
+    """
+    Get doctor's schedule for a specific date
+    Checks custom availability first, falls back to weekly pattern
+
+    Args:
+        doctor_id: Doctor ID
+        date_str: Date in YYYY-MM-DD format
+        db: Database session
+
+    Returns:
+        Dict with schedule info or None if doctor doesn't work that day
+        Format: {
+            'active': bool,
+            'start_time': str,
+            'end_time': str,
+            'break_start': str or None,
+            'break_end': str or None,
+            'is_custom': bool
+        }
+    """
+    # First, check for custom availability for this specific date
+    custom_avail = get_custom_availability_for_date(doctor_id, date_str, db)
+
+    if custom_avail:
+        # Custom availability found - use it
+        if not custom_avail.available:
+            return None  # Doctor explicitly not available this day
+
+        return {
+            'active': True,
+            'start_time': custom_avail.start_time.strftime('%H:%M') if custom_avail.start_time else None,
+            'end_time': custom_avail.end_time.strftime('%H:%M') if custom_avail.end_time else None,
+            'break_start': custom_avail.break_start.strftime('%H:%M') if custom_avail.break_start else None,
+            'break_end': custom_avail.break_end.strftime('%H:%M') if custom_avail.break_end else None,
+            'is_custom': True
+        }
+
+    # No custom availability - fall back to weekly pattern
     day_name = get_date_name(date_str)
 
     if not day_name:
@@ -121,7 +194,17 @@ def get_doctor_schedule_for_date(
         (HorarioDoctor.day == day_name)
     ).first()
 
-    return schedule
+    if not schedule or not schedule.active:
+        return None
+
+    return {
+        'active': schedule.active,
+        'start_time': schedule.start_time,
+        'end_time': schedule.end_time,
+        'break_start': schedule.break_start,
+        'break_end': schedule.break_end,
+        'is_custom': False
+    }
 
 
 def generate_time_slots(
@@ -235,32 +318,35 @@ def is_time_available(
     return True
 
 
-def is_time_within_schedule(start_time: str, duration_minutes: int, schedule: HorarioDoctor) -> bool:
+def is_time_within_schedule(start_time: str, duration_minutes: int, schedule: Dict[str, Any]) -> bool:
     """
     Check if a time + duration fits within the doctor's schedule
 
     Args:
         start_time: Start time in HH:MM format
         duration_minutes: Duration in minutes
-        schedule: HorarioDoctor object
+        schedule: Schedule dict from get_doctor_schedule_for_date
 
     Returns:
         True if fits within schedule, False otherwise
     """
+    if not schedule or not schedule.get('active'):
+        return False
+
     start_minutes = time_to_minutes(start_time)
     end_minutes = start_minutes + duration_minutes
 
-    schedule_start = time_to_minutes(schedule.start_time)
-    schedule_end = time_to_minutes(schedule.end_time)
+    schedule_start = time_to_minutes(schedule['start_time'])
+    schedule_end = time_to_minutes(schedule['end_time'])
 
     # Basic check: appointment must be within schedule hours
     if start_minutes < schedule_start or end_minutes > schedule_end:
         return False
 
     # Check if appointment overlaps with break
-    if schedule.break_start and schedule.break_end:
-        break_start = time_to_minutes(schedule.break_start)
-        break_end = time_to_minutes(schedule.break_end)
+    if schedule.get('break_start') and schedule.get('break_end'):
+        break_start = time_to_minutes(schedule['break_start'])
+        break_end = time_to_minutes(schedule['break_end'])
 
         # Appointment overlaps with break if it starts before break ends and ends after break starts
         if start_minutes < break_end and end_minutes > break_start:
@@ -273,10 +359,11 @@ def get_available_slots(
     doctor_id: int,
     date_str: str,
     db: Session,
-    slot_duration: int = 30
+    slot_duration: Optional[int] = None
 ) -> List[str]:
     """
     Get all available time slots for a doctor on a specific date
+    Uses doctor's preferred slot duration if not specified
 
     Main orchestration function that combines all availability checks
 
@@ -284,23 +371,27 @@ def get_available_slots(
         doctor_id: Doctor ID
         date_str: Date in YYYY-MM-DD format
         db: Database session
-        slot_duration: Duration of each slot in minutes (default: 30)
+        slot_duration: Duration of each slot in minutes (uses doctor's preference if not specified)
 
     Returns:
         List of available time slots in HH:MM format
     """
-    # Get doctor's schedule for this day
+    # Get doctor's schedule for this day (custom or weekly pattern)
     schedule = get_doctor_schedule_for_date(doctor_id, date_str, db)
 
-    if not schedule or not schedule.active:
+    if not schedule or not schedule['active']:
         return []
+
+    # Use doctor's preferred slot duration if not specified
+    if slot_duration is None:
+        slot_duration = get_doctor_slot_duration(doctor_id, db)
 
     # Generate all possible slots for this day
     all_slots = generate_time_slots(
-        schedule.start_time,
-        schedule.end_time,
-        schedule.break_start,
-        schedule.break_end,
+        schedule['start_time'],
+        schedule['end_time'],
+        schedule.get('break_start'),
+        schedule.get('break_end'),
         slot_duration
     )
 
@@ -326,6 +417,7 @@ def validate_appointment_availability(
 ) -> Tuple[bool, Optional[str]]:
     """
     Comprehensive validation for appointment availability
+    Considers custom availability and doctor-specific constraints
 
     Args:
         doctor_id: Doctor ID
@@ -348,13 +440,13 @@ def validate_appointment_availability(
     except:
         return False, "Fecha inválida"
 
-    # Check if doctor has schedule for this day
+    # Check if doctor has schedule for this day (custom or weekly)
     schedule = get_doctor_schedule_for_date(doctor_id, date, db)
 
     if not schedule:
         return False, "Doctor no tiene horario asignado para este día"
 
-    if not schedule.active:
+    if not schedule['active']:
         return False, "Doctor no atiende este día"
 
     # Convert duration

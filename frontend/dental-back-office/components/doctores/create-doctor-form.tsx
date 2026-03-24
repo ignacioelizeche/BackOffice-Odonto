@@ -36,7 +36,15 @@ const createDoctorSchema = z.object({
   specialty: z.string().min(2, "Seleccione una especialidad"),
   licenseNumber: z.string().min(5, "El número de licencia debe tener al menos 5 caracteres"),
   yearsExperience: z.coerce.number().min(0, "Debe ser un número positivo").max(50, "Valor máximo 50 años"),
-})
+  preferredSlotDuration: z.coerce.number().min(5, "Mínimo 5 minutos").max(180, "Máximo 180 minutos"),
+  minimumSlotDuration: z.coerce.number().min(5, "Mínimo 5 minutos").max(180, "Máximo 180 minutos"),
+}).refine(
+  (data) => data.minimumSlotDuration <= data.preferredSlotDuration,
+  {
+    message: "La duración mínima no puede ser mayor que la preferida",
+    path: ["minimumSlotDuration"],
+  }
+)
 
 type CreateDoctorFormValues = z.infer<typeof createDoctorSchema>
 
@@ -76,6 +84,8 @@ export function CreateDoctorForm() {
       specialty: "",
       licenseNumber: "",
       yearsExperience: 0,
+      preferredSlotDuration: 30,  // Duración preferida por defecto: 30 minutos
+      minimumSlotDuration: 15,    // Duración mínima por defecto: 15 minutos
     },
   })
 
@@ -87,13 +97,15 @@ export function CreateDoctorForm() {
       const doctorData: CreateDoctorDTO = {
         ...values,
         workSchedule: defaultWorkSchedule,
+        preferredSlotDuration: values.preferredSlotDuration,
+        minimumSlotDuration: values.minimumSlotDuration,
       }
 
       // Llamar al servicio API
       const newDoctor = await doctorsService.create(doctorData)
 
       toast.success("Doctor creado exitosamente", {
-        description: `${newDoctor.name} ha sido registrado en el sistema`,
+        description: `${newDoctor.name} ha sido registrado con turnos de ${values.preferredSlotDuration} minutos`,
       })
 
       // Redirigir a la lista de doctores después de 1 segundo
@@ -245,6 +257,66 @@ export function CreateDoctorForm() {
               </FormItem>
             )}
           />
+
+          {/* Configuración de Turnos */}
+          <div className="space-y-4 p-4 border rounded-lg bg-background">
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Configuración de Turnos</h4>
+              <p className="text-xs text-muted-foreground">
+                Duración preferida y mínima para los turnos de este doctor
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="preferredSlotDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duración Preferida (minutos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={180}
+                        placeholder="Ej: 30"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Duración estándar para turnos con este doctor (5-180 minutos)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="minimumSlotDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duración Mínima (minutos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={180}
+                        placeholder="Ej: 15"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 15)}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Duración mínima permitida para turnos (5-180 minutos)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Información del Horario */}

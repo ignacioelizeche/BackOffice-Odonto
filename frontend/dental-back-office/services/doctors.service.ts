@@ -47,6 +47,8 @@ export interface Doctor {
   schedule?: ScheduleSlot[]
   nextAppointments?: Appointment[]
   workSchedule?: WorkDay[]
+  preferredSlotDuration?: number  // Duración preferida en minutos
+  minimumSlotDuration?: number    // Duración mínima en minutos
   monthlyStats?: {
     completed: number
     cancelled: number
@@ -66,6 +68,8 @@ export interface CreateDoctorDTO {
   licenseNumber: string
   yearsExperience: number
   workSchedule: WorkDay[]
+  preferredSlotDuration?: number  // Duración preferida en minutos
+  minimumSlotDuration?: number    // Duración mínima en minutos
 }
 
 export interface UpdateDoctorScheduleDTO {
@@ -80,6 +84,48 @@ export interface UpdateDoctorStatusResponse {
   id: number
   status: string
   message: string
+}
+
+// ============= Tipos para Slot Duration =============
+
+export interface UpdateSlotDurationDTO {
+  preferredSlotDuration: number
+  minimumSlotDuration: number
+}
+
+export interface SlotDurationResponse {
+  id: number
+  preferredSlotDuration: number
+  minimumSlotDuration: number
+  message: string
+}
+
+// ============= Tipos para Custom Availability =============
+
+export interface CustomAvailability {
+  id?: number
+  doctorId: number
+  date: string  // YYYY-MM-DD format
+  available: boolean
+  startTime?: string  // HH:MM format
+  endTime?: string    // HH:MM format
+  breakStart?: string // HH:MM format
+  breakEnd?: string   // HH:MM format
+  notes?: string
+}
+
+export interface CustomAvailabilityResponse {
+  data: CustomAvailability[]
+}
+
+export interface CreateCustomAvailabilityDTO {
+  date: string
+  available: boolean
+  start_time?: string
+  end_time?: string
+  break_start?: string
+  break_end?: string
+  notes?: string
 }
 
 /**
@@ -134,5 +180,75 @@ export const doctorsService = {
     return apiClient.put<UpdateDoctorStatusResponse>(`/doctores/${id}/status`, {
       status,
     })
+  },
+
+  // ============= Métodos para Slot Duration =============
+
+  /**
+   * Actualiza la duración preferida y mínima de turnos de un doctor
+   * PUT /api/doctores/:id/slot-duration
+   */
+  async updateSlotDuration(
+    id: number,
+    preferredSlotDuration: number,
+    minimumSlotDuration: number
+  ): Promise<SlotDurationResponse> {
+    return apiClient.put<SlotDurationResponse>(`/doctores/${id}/slot-duration`, {
+      preferred_slot_duration: preferredSlotDuration,
+      minimum_slot_duration: minimumSlotDuration,
+    })
+  },
+
+  // ============= Métodos para Custom Availability =============
+
+  /**
+   * Obtiene la disponibilidad personalizada de un doctor para un rango de fechas
+   * GET /api/doctores/:id/availability/custom?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+   */
+  async getCustomAvailability(
+    id: number,
+    startDate?: string,
+    endDate?: string
+  ): Promise<CustomAvailabilityResponse> {
+    const params = new URLSearchParams()
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiClient.get<CustomAvailabilityResponse>(`/doctores/${id}/availability/custom${query}`)
+  },
+
+  /**
+   * Crea nueva disponibilidad personalizada para una fecha específica
+   * POST /api/doctores/:id/availability/custom
+   */
+  async createCustomAvailability(
+    id: number,
+    availability: CreateCustomAvailabilityDTO
+  ): Promise<CustomAvailability> {
+    return apiClient.post<CustomAvailability>(`/doctores/${id}/availability/custom`, availability)
+  },
+
+  /**
+   * Actualiza disponibilidad personalizada para una fecha específica
+   * PUT /api/doctores/:id/availability/custom/:date
+   */
+  async updateCustomAvailability(
+    id: number,
+    date: string,
+    availability: Omit<CreateCustomAvailabilityDTO, 'date'>
+  ): Promise<CustomAvailability> {
+    return apiClient.put<CustomAvailability>(`/doctores/${id}/availability/custom/${date}`, availability)
+  },
+
+  /**
+   * Elimina disponibilidad personalizada para una fecha específica
+   * DELETE /api/doctores/:id/availability/custom/:date
+   */
+  async deleteCustomAvailability(
+    id: number,
+    date: string
+  ): Promise<{ message: string }> {
+    return apiClient.delete<{ message: string }>(`/doctores/${id}/availability/custom/${date}`)
   },
 }

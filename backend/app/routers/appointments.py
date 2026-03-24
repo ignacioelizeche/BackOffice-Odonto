@@ -2,7 +2,7 @@
 Appointments router - Endpoints for appointment management
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Optional
 import logging
@@ -27,9 +27,64 @@ from app.services.notification_service import (
     notify_appointment_completed,
     notify_appointment_cancelled
 )
+from app.services.n8n_integration_service import n8n_service
 
 router = APIRouter(prefix="/citas", tags=["Citas"])
 logger = logging.getLogger(__name__)
+
+
+async def sync_appointment_to_calendar(
+    appointment_id: int,
+    doctor_id: int,
+    patient_name: str,
+    appointment_date,
+    appointment_time,
+    status: str,
+    google_calendar_event_id: str = None,
+    empresa_id: int = None,
+    action: str = "update"
+):
+    """
+    Background task to sync appointment changes to Google Calendar via N8N
+
+    Args:
+        appointment_id: ID of the appointment
+        doctor_id: ID of the doctor
+        patient_name: Name of the patient
+        appointment_date: Date of the appointment
+        appointment_time: Time of the appointment
+        status: Status of the appointment
+        google_calendar_event_id: Existing Google Calendar event ID (if any)
+        empresa_id: ID of the enterprise
+        action: 'update' for create/update, 'delete' for deletion
+    """
+    try:
+        if action == "delete":
+            # For deletions, we need the google_calendar_event_id
+            if google_calendar_event_id:
+                await n8n_service.trigger_delete_appointment(
+                    appointment_id=appointment_id,
+                    google_calendar_event_id=google_calendar_event_id,
+                    doctor_id=doctor_id,
+                    empresa_id=empresa_id
+                )
+        else:
+            # For updates/creates
+            await n8n_service.trigger_update_appointment(
+                appointment_id=appointment_id,
+                doctor_id=doctor_id,
+                patient_name=patient_name,
+                appointment_date=appointment_date,
+                appointment_time=appointment_time,
+                status=status,
+                google_calendar_event_id=google_calendar_event_id,
+                empresa_id=empresa_id
+            )
+
+    except Exception as e:
+        # Log error but don't fail the appointment operation
+        logger.error(f"Failed to sync appointment {appointment_id} to calendar: {str(e)}")
+
 
 # CORS preflight handlers
 @router.options("")
@@ -75,10 +130,10 @@ def get_doctor_availability(
             detail="Doctor no encontrado"
         )
 
-    # Get available slots
+    # Get available slots (now uses doctor's preferred slot duration)
     available_slots_list = get_available_slots(doctor_id, date, db)
 
-    # Get doctor's schedule for this day
+    # Get doctor's schedule for this day (includes custom availability)
     schedule = get_doctor_schedule_for_date(doctor_id, date, db)
 
     # Convert to response objects
@@ -92,14 +147,15 @@ def get_doctor_availability(
 
     # Convert schedule to WorkDayBase format if available
     schedule_response = None
-    if schedule:
+    if schedule and schedule['active']:
         schedule_response = {
-            "day": schedule.day,
-            "active": schedule.active,
-            "startTime": schedule.start_time,
-            "endTime": schedule.end_time,
-            "breakStart": schedule.break_start or "",
-            "breakEnd": schedule.break_end or ""
+            "day": day_name,
+            "active": schedule['active'],
+            "startTime": schedule['start_time'] or "",
+            "endTime": schedule['end_time'] or "",
+            "breakStart": schedule.get('break_start') or "",
+            "breakEnd": schedule.get('break_end') or "",
+            "isCustom": schedule.get('is_custom', False)  # Indicate if custom schedule
         }
 
     return DoctorAvailabilityResponse(
@@ -407,6 +463,7 @@ def get_appointment(
 def update_appointment(
     appointment_id: int,
     appointment_data: AppointmentUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -458,12 +515,34 @@ def update_appointment(
     db.commit()
     db.refresh(appointment)
 
+    # Get patient name for calendar sync
+    patient_name = "Paciente Sin Nombre"
+    if appointment.paciente_id:
+        patient = db.query(Paciente).filter(Paciente.id == appointment.paciente_id).first()
+        if patient:
+            patient_name = f"{patient.nombre} {patient.apellido}" if patient.apellido else patient.nombre
+
+    # Sync appointment changes to calendar in background
+    background_tasks.add_task(
+        sync_appointment_to_calendar,
+        appointment_id=appointment.id,
+        doctor_id=appointment.doctor_id,
+        patient_name=patient_name,
+        appointment_date=appointment.fecha,
+        appointment_time=appointment.hora,
+        status=appointment.status.value if appointment.status else "pendiente",
+        google_calendar_event_id=appointment.google_calendar_event_id,
+        empresa_id=appointment.empresa_id,
+        action="update"
+    )
+
     return AppointmentUpdateResponse(id=appointment.id)
 
 @router.patch("/{appointment_id}/estado", response_model=AppointmentStatusUpdateResponse)
 def update_appointment_status(
     appointment_id: int,
     status_data: AppointmentStatusUpdateRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -542,11 +621,33 @@ def update_appointment_status(
     db.commit()
     db.refresh(appointment)
 
+    # Get patient name for calendar sync
+    patient_name = "Paciente Sin Nombre"
+    if appointment.paciente_id:
+        patient = db.query(Paciente).filter(Paciente.id == appointment.paciente_id).first()
+        if patient:
+            patient_name = f"{patient.nombre} {patient.apellido}" if patient.apellido else patient.nombre
+
+    # Sync appointment status changes to calendar in background
+    background_tasks.add_task(
+        sync_appointment_to_calendar,
+        appointment_id=appointment.id,
+        doctor_id=appointment.doctor_id,
+        patient_name=patient_name,
+        appointment_date=appointment.fecha,
+        appointment_time=appointment.hora,
+        status=appointment.status.value if appointment.status else "pendiente",
+        google_calendar_event_id=appointment.google_calendar_event_id,
+        empresa_id=appointment.empresa_id,
+        action="update"
+    )
+
     return AppointmentStatusUpdateResponse(id=appointment.id, status=appointment.status.value)
 
 @router.delete("/{appointment_id}", response_model=AppointmentDeleteResponse)
 def delete_appointment(
     appointment_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -580,7 +681,30 @@ def delete_appointment(
                 headers={"X-Error-Code": "FORBIDDEN"}
             )
 
+    # Store appointment data for calendar sync before deletion
+    appointment_data = {
+        "id": appointment.id,
+        "google_calendar_event_id": appointment.google_calendar_event_id,
+        "doctor_id": appointment.doctor_id,
+        "empresa_id": appointment.empresa_id
+    }
+
     db.delete(appointment)
     db.commit()
+
+    # Sync appointment deletion to calendar in background (if there was a calendar event)
+    if appointment_data["google_calendar_event_id"]:
+        background_tasks.add_task(
+            sync_appointment_to_calendar,
+            appointment_id=appointment_data["id"],
+            doctor_id=appointment_data["doctor_id"],
+            patient_name="Paciente",  # Not needed for deletion
+            appointment_date=None,  # Not needed for deletion
+            appointment_time=None,  # Not needed for deletion
+            status="",  # Not needed for deletion
+            google_calendar_event_id=appointment_data["google_calendar_event_id"],
+            empresa_id=appointment_data["empresa_id"],
+            action="delete"
+        )
 
     return AppointmentDeleteResponse()

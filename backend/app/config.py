@@ -70,6 +70,14 @@ class Settings:
         "N8N_CREATE_DOCTOR_CALENDAR_WEBHOOK_URL",
         ""
     )
+    N8N_UPDATE_APPOINTMENT_WEBHOOK_URL: str = os.getenv(
+        "N8N_UPDATE_APPOINTMENT_WEBHOOK_URL",
+        ""
+    )
+    N8N_DELETE_APPOINTMENT_WEBHOOK_URL: str = os.getenv(
+        "N8N_DELETE_APPOINTMENT_WEBHOOK_URL",
+        ""
+    )
 
     class Config:
         env_file = ".env"

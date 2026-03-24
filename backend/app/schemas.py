@@ -2,9 +2,9 @@
 Pydantic schemas for request/response validation
 """
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, field_serializer, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, field_serializer, model_validator, model_serializer
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 
 # ============= ENUMS =============
@@ -177,6 +177,8 @@ class DoctorResponse(BaseModel):
     rating: float
     reviewCount: int = Field(alias="review_count")
     yearsExperience: int = Field(alias="years_experience")
+    preferredSlotDuration: Optional[int] = Field(None, alias="preferred_slot_duration")
+    minimumSlotDuration: Optional[int] = Field(None, alias="minimum_slot_duration")
     schedule: Optional[List[ScheduleSlot]] = None
     workSchedule: Optional[List[WorkDayBase]] = Field(None, alias="work_schedule")
     monthlyStats: Optional[dict] = Field(None, alias="monthly_stats")
@@ -185,6 +187,28 @@ class DoctorResponse(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+    @model_serializer(mode='wrap', when_used='json')
+    def serialize_model(self, serializer, info):
+        """Custom serializer to output with camelCase field names instead of snake_case aliases"""
+        data = serializer(self)
+        # Map snake_case keys back to camelCase field names for JSON output
+        if isinstance(data, dict):
+            keys_to_rename = {
+                'license_number': 'licenseNumber',
+                'patients_today': 'patientsToday',
+                'patients_total': 'patientsTotal',
+                'review_count': 'reviewCount',
+                'years_experience': 'yearsExperience',
+                'preferred_slot_duration': 'preferredSlotDuration',
+                'minimum_slot_duration': 'minimumSlotDuration',
+                'monthly_stats': 'monthlyStats',
+                'work_schedule': 'workSchedule',
+            }
+            for old_key, new_key in keys_to_rename.items():
+                if old_key in data:
+                    data[new_key] = data.pop(old_key)
+        return data
 
     @model_validator(mode='before')
     @classmethod
@@ -207,11 +231,28 @@ class DoctorResponse(BaseModel):
                     result.append(work_day)
                 # Convert ORM object to dict for Pydantic processing
                 data_dict = {}
-                for key in ['id', 'name', 'initials', 'email', 'phone', 'specialty',
-                           'license_number', 'status', 'patients_today', 'patients_total',
-                           'rating', 'review_count', 'years_experience', 'monthly_stats', 'empresa_id']:
-                    if hasattr(data, key):
-                        data_dict[key] = getattr(data, key)
+                field_mapping = {
+                    'id': 'id',
+                    'name': 'name',
+                    'initials': 'initials',
+                    'email': 'email',
+                    'phone': 'phone',
+                    'specialty': 'specialty',
+                    'license_number': 'licenseNumber',
+                    'status': 'status',
+                    'patients_today': 'patientsToday',
+                    'patients_total': 'patientsTotal',
+                    'rating': 'rating',
+                    'review_count': 'reviewCount',
+                    'years_experience': 'yearsExperience',
+                    'preferred_slot_duration': 'preferredSlotDuration',
+                    'minimum_slot_duration': 'minimumSlotDuration',
+                    'monthly_stats': 'monthlyStats',
+                    'empresa_id': 'empresa_id',
+                }
+                for db_key, schema_key in field_mapping.items():
+                    if hasattr(data, db_key):
+                        data_dict[schema_key] = getattr(data, db_key)
                 data_dict['workSchedule'] = result if result else None
                 return data_dict
         # Handle dict objects
@@ -598,3 +639,76 @@ class NotificacionesListResponse(BaseModel):
 
 class NotificacionMarkAsRead(BaseModel):
     read: bool = True
+
+# ============= DOCTOR CUSTOM AVAILABILITY =============
+from datetime import time
+
+class CustomAvailabilityBase(BaseModel):
+    date: str  # YYYY-MM-DD format
+    available: bool = True
+    start_time: Optional[str] = Field(None, alias="startTime")  # HH:MM format
+    end_time: Optional[str] = Field(None, alias="endTime")  # HH:MM format
+    break_start: Optional[str] = Field(None, alias="breakStart")  # HH:MM format
+    break_end: Optional[str] = Field(None, alias="breakEnd")  # HH:MM format
+    notes: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
+    @field_validator('date', mode='before')
+    @classmethod
+    def convert_date_to_string(cls, v):
+        """Convert datetime.date objects to ISO format strings"""
+        if isinstance(v, date):
+            return v.isoformat()
+        return v
+
+    @field_validator('start_time', 'end_time', 'break_start', 'break_end', mode='before')
+    @classmethod
+    def convert_time_to_string(cls, v):
+        """Convert datetime.time objects to HH:MM format strings"""
+        if isinstance(v, time):
+            return v.isoformat(timespec='minutes')
+        return v
+
+class CustomAvailabilityCreate(CustomAvailabilityBase):
+    pass
+
+class CustomAvailabilityUpdate(CustomAvailabilityBase):
+    date: Optional[str] = None  # Date comes from URL path
+
+class CustomAvailabilityResponse(CustomAvailabilityBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class CustomAvailabilityListResponse(BaseModel):
+    data: List[CustomAvailabilityResponse]
+
+class UpdateDoctorSlotDurationRequest(BaseModel):
+    preferred_slot_duration: int = Field(ge=5, le=180, description="Preferred slot duration in minutes", alias="preferredSlotDuration")
+    minimum_slot_duration: int = Field(ge=5, le=180, description="Minimum slot duration in minutes", alias="minimumSlotDuration")
+
+    class Config:
+        populate_by_name = True
+
+    @field_validator('preferred_slot_duration', 'minimum_slot_duration')
+    @classmethod
+    def validate_duration(cls, v):
+        # Allow any duration from 5 to 180 minutes
+        if v < 5 or v > 180:
+            raise ValueError('Slot duration must be between 5 and 180 minutes')
+        return v
+
+    @model_validator(mode='after')
+    def validate_min_vs_preferred(self):
+        if self.minimum_slot_duration > self.preferred_slot_duration:
+            raise ValueError('Minimum slot duration cannot be greater than preferred slot duration')
+        return self
+
+class UpdateDoctorSlotDurationResponse(BaseModel):
+    id: int
+    preferred_slot_duration: int
+    minimum_slot_duration: int
+    message: str = "Intervalos de cita actualizados exitosamente"

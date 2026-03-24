@@ -2,7 +2,7 @@
 Database models using SQLAlchemy
 """
 
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, ForeignKey, Table, Enum, JSON
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, ForeignKey, Table, Enum, JSON, Date, Time
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
@@ -183,6 +183,8 @@ class Doctor(Base):
     google_calendar_id = Column(String(255), nullable=True)
     google_calendar_email = Column(String(255), nullable=True)
     calendar_sync_enabled = Column(Boolean, default=True)
+    preferred_slot_duration = Column(Integer, default=30)
+    minimum_slot_duration = Column(Integer, default=15)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -191,6 +193,7 @@ class Doctor(Base):
     usuario = relationship("Usuario", uselist=False, back_populates="doctor", foreign_keys="Usuario.doctor_id")
     appointments = relationship("Cita", back_populates="doctor")
     work_schedule = relationship("HorarioDoctor", back_populates="doctor", cascade="all, delete-orphan")
+    custom_availability = relationship("DoctorCustomAvailability", back_populates="doctor", cascade="all, delete-orphan")
     monthly_stats = relationship("EstadisticasDoctor", back_populates="doctor", uselist=False)
 
 class HorarioDoctor(Base):
@@ -242,6 +245,25 @@ class HorarioDoctor(Base):
     @breakEnd.setter
     def breakEnd(self, value):
         self.break_end = value
+
+class DoctorCustomAvailability(Base):
+    __tablename__ = "doctor_custom_availability"
+
+    id = Column(Integer, primary_key=True, index=True)
+    empresa_id = Column(Integer, ForeignKey("empresas.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctores.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    available = Column(Boolean, default=True)
+    start_time = Column(Time, nullable=True)
+    end_time = Column(Time, nullable=True)
+    break_start = Column(Time, nullable=True)
+    break_end = Column(Time, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    doctor = relationship("Doctor", back_populates="custom_availability")
 
 class EstadisticasDoctor(Base):
     __tablename__ = "estadisticas_doctores"

@@ -25,7 +25,9 @@ import {
 import type { WorkDay } from "./doctors-data"
 import { cn } from "@/lib/utils"
 import { WorkScheduleEditor } from "./work-schedule-editor"
-import { doctorsService, type Doctor } from "@/services/doctors.service"
+import { AvailabilityCalendar } from "./availability-calendar"
+import { CustomAvailabilityModal } from "./custom-availability-modal"
+import { doctorsService, type Doctor, type CustomAvailability } from "@/services/doctors.service"
 import { useAuth } from "@/contexts/auth-context"
 import {
   Select,
@@ -34,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 
 function getDoctorStatusBadge(status: string) {
   switch (status) {
@@ -70,6 +73,20 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
   const [statusChangeError, setStatusChangeError] = useState<string | null>(null)
   const [statusChangeSuccess, setStatusChangeSuccess] = useState(false)
   const [statusEditMode, setStatusEditMode] = useState(false)
+
+  // Slot duration states
+  const [slotDurationEditMode, setSlotDurationEditMode] = useState(false)
+  const [savingSlotDuration, setSavingSlotDuration] = useState(false)
+  const [slotDurationError, setSlotDurationError] = useState<string | null>(null)
+  const [slotDurationSuccess, setSlotDurationSuccess] = useState(false)
+  const [preferredDuration, setPreferredDuration] = useState(doctor.preferredSlotDuration || 30)
+  const [minimumDuration, setMinimumDuration] = useState(doctor.minimumSlotDuration || 15)
+
+  // Custom availability states
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false)
+  const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState<string | null>(null)
+  const [availabilityToEdit, setAvailabilityToEdit] = useState<CustomAvailability | undefined>()
+  const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0)
 
   // Check if current user is this doctor
   const isOwnProfile = user?.role === "Doctor" && user?.name === doctor.name
@@ -175,6 +192,69 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
     }
   }
 
+  async function handleUpdateSlotDuration() {
+    try {
+      setSavingSlotDuration(true)
+      setSlotDurationError(null)
+      setSlotDurationSuccess(false)
+
+      console.log("[Doctor Detail] Actualizando duración de turnos del doctor ID:", doctor.id)
+
+      // Validation
+      if (minimumDuration > preferredDuration) {
+        throw new Error("La duración mínima no puede ser mayor que la preferida")
+      }
+
+      // Call backend API to update slot duration
+      const response = await doctorsService.updateSlotDuration(doctor.id, preferredDuration, minimumDuration)
+
+      console.log("[Doctor Detail] Respuesta del servidor:", response)
+
+      // Reload doctor data from backend to verify persistence
+      console.log("[Doctor Detail] Recargando datos del doctor desde el backend...")
+      const updatedDoctor = await doctorsService.getById(doctor.id)
+
+      // Update local state with fresh data from backend
+      setDoctor(updatedDoctor)
+      setPreferredDuration(updatedDoctor.preferredSlotDuration || 30)
+      setMinimumDuration(updatedDoctor.minimumSlotDuration || 15)
+
+      // Show success message
+      setSlotDurationSuccess(true)
+      setSlotDurationEditMode(false)
+      setTimeout(() => {
+        setSlotDurationSuccess(false)
+      }, 3000)
+    } catch (err) {
+      console.error("[Doctor Detail] Error al actualizar duración de turnos:", err)
+      setSlotDurationError(
+        err instanceof Error
+          ? err.message
+          : "Error al actualizar la duración. Por favor intenta de nuevo."
+      )
+    } finally {
+      setSavingSlotDuration(false)
+    }
+  }
+
+  function handleOpenAvailabilityModal(date: string, existing?: CustomAvailability) {
+    setSelectedAvailabilityDate(date)
+    setAvailabilityToEdit(existing)
+    setShowAvailabilityModal(true)
+  }
+
+  function handleCloseAvailabilityModal() {
+    setShowAvailabilityModal(false)
+    setSelectedAvailabilityDate(null)
+    setAvailabilityToEdit(undefined)
+  }
+
+  function handleAvailabilitySaved() {
+    // Trigger calendar refresh
+    setAvailabilityRefreshKey(prev => prev + 1)
+    handleCloseAvailabilityModal()
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Back button */}
@@ -195,13 +275,20 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
         </div>
       )}
 
-      {/* Error message */}
-      {saveScheduleError && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-medium text-destructive flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" />
-          {saveScheduleError}
-        </div>
-      )}
+          {/* Slot Duration success message */}
+          {slotDurationSuccess && (
+            <div className="rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm font-medium text-accent">
+              Configuración de turnos actualizada exitosamente
+            </div>
+          )}
+
+          {/* Slot Duration error message */}
+          {slotDurationError && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-medium text-destructive flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {slotDurationError}
+            </div>
+          )}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Left column: Profile + Contact */}
@@ -346,6 +433,102 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
               </div>
             </CardContent>
           </Card>
+
+          {/* Slot Duration Configuration */}
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold text-card-foreground flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Configuración de Turnos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              {/* Display mode */}
+              {!slotDurationEditMode ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground">Duración preferida</p>
+                      <p className="text-xs text-muted-foreground">Duración estándar de turnos</p>
+                    </div>
+                    <p className="text-sm font-semibold text-primary">{doctor.preferredSlotDuration || 30} min</p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground">Duración mínima</p>
+                      <p className="text-xs text-muted-foreground">Duración más corta permitida</p>
+                    </div>
+                    <p className="text-sm font-semibold text-muted-foreground">{doctor.minimumSlotDuration || 15} min</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSlotDurationEditMode(true)}
+                    className="w-full text-xs"
+                  >
+                    Editar Configuración
+                  </Button>
+                </div>
+              ) : (
+                /* Edit mode */
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-card-foreground">Duración Preferida (minutos)</label>
+                    <Input
+                      type="number"
+                      min={5}
+                      max={180}
+                      value={preferredDuration}
+                      onChange={(e) => setPreferredDuration(parseInt(e.target.value) || 30)}
+                      className="h-8 text-xs mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Entre 5 y 180 minutos</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-card-foreground">Duración Mínima (minutos)</label>
+                    <Input
+                      type="number"
+                      min={5}
+                      max={180}
+                      value={minimumDuration}
+                      onChange={(e) => setMinimumDuration(parseInt(e.target.value) || 15)}
+                      className="h-8 text-xs mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Entre 5 y 180 minutos</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleUpdateSlotDuration}
+                      disabled={savingSlotDuration}
+                      className="flex-1 text-xs"
+                    >
+                      {savingSlotDuration ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                          Guardando...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="mr-1.5 h-3 w-3" />
+                          Guardar
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSlotDurationEditMode(false)}
+                      disabled={savingSlotDuration}
+                      className="text-xs"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right column: Schedule + Work Schedule Editor */}
@@ -393,6 +576,16 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
             doctorColor={doctor.color ?? getDefaultDoctorColor()}
             onSave={handleSaveSchedule}
             saving={savingSchedule}
+          />
+
+          {/* Custom Availability Calendar */}
+          <AvailabilityCalendar
+            doctor={doctor}
+            onDateClick={(date, existing) => {
+              handleOpenAvailabilityModal(date, existing)
+            }}
+            selectedDate={selectedAvailabilityDate || undefined}
+            refreshKey={availabilityRefreshKey}
           />
 
           {/* Full schedule */}
@@ -470,6 +663,18 @@ export function DoctorDetailView({ doctor: initialDoctor, onBack }: DoctorDetail
           </Card>
         </div>
       </div>
+
+      {/* Custom Availability Modal */}
+      {selectedAvailabilityDate && (
+        <CustomAvailabilityModal
+          isOpen={showAvailabilityModal}
+          onClose={handleCloseAvailabilityModal}
+          date={selectedAvailabilityDate}
+          doctorId={doctor.id}
+          existingAvailability={availabilityToEdit}
+          onSave={handleAvailabilitySaved}
+        />
+      )}
     </div>
   )
 }

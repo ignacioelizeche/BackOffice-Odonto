@@ -49,10 +49,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS with proper settings
 _origins_env = os.getenv("CORS_ORIGINS", os.getenv("ALLOWED_ORIGINS", ""))
-if _origins_env:
+if _origins_env and _origins_env.strip() != "*":
+    # Specific origins provided
     cors_origins = [o.strip() for o in _origins_env.split(",") if o.strip()]
+elif _origins_env and _origins_env.strip() == "*":
+    # Allow all origins
+    cors_origins = ["*"]
 else:
-    cors_origins = ["http://localhost:3000"]
+    # Default to localhost:3000
+    cors_origins = ["http://localhost:3000", "http://localhost:8443", "http://localhost:8080"]
 
 app.add_middleware(
     CORSMiddleware,

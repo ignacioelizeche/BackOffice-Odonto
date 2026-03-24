@@ -1,13 +1,14 @@
 """
 Calendar router - Endpoints for Google Calendar integration
-Callback endpoints for N8N to notify backend about calendar creation
+Callback endpoints for N8N to notify backend about calendar operations
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 from app.database import get_db
-from app.models import Doctor
+from app.models import Doctor, Cita
 from app.auth import get_current_user
 import logging
 
@@ -27,6 +28,22 @@ class DoctorCalendarErrorRequest(BaseModel):
     """Request body when N8N callback about calendar creation error"""
     doctor_id: int
     error_message: str
+
+
+class AppointmentCalendarUpdatedRequest(BaseModel):
+    """Request body when N8N callback about appointment calendar update/create"""
+    appointment_id: int
+    google_calendar_event_id: str
+    success: bool
+    error: Optional[str] = None
+
+
+class AppointmentCalendarDeletedRequest(BaseModel):
+    """Request body when N8N callback about appointment calendar deletion"""
+    appointment_id: int
+    google_calendar_event_id: str
+    success: bool
+    error: Optional[str] = None
 
 
 @router.post("/doctor-calendar-created")
@@ -118,6 +135,111 @@ def doctor_calendar_error(
         return {"success": False, "error": str(e)}
 
 
+@router.post("/appointment-calendar-updated")
+def appointment_calendar_updated(
+    request: AppointmentCalendarUpdatedRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Callback endpoint for N8N to notify backend about appointment calendar update/create
+
+    Called by N8N workflow after successfully creating or updating a Google Calendar event for an appointment
+    """
+    try:
+        # Get the appointment
+        appointment = db.query(Cita).filter(Cita.id == request.appointment_id).first()
+
+        if not appointment:
+            logger.warning(f"Appointment not found: {request.appointment_id}")
+            return {"success": False, "message": "Appointment not found"}
+
+        if request.success:
+            # Update appointment with calendar event ID
+            appointment.google_calendar_event_id = request.google_calendar_event_id
+            db.commit()
+            db.refresh(appointment)
+
+            logger.info(
+                f"Successfully saved calendar event for appointment {appointment.id}: "
+                f"event_id={request.google_calendar_event_id}"
+            )
+
+            return {
+                "success": True,
+                "message": f"Calendar event saved for appointment {appointment.id}",
+                "appointment_id": appointment.id,
+                "google_calendar_event_id": request.google_calendar_event_id
+            }
+        else:
+            # Log the error but don't fail the appointment
+            logger.error(
+                f"N8N failed to update calendar for appointment {appointment.id}: "
+                f"{request.error or 'Unknown error'}"
+            )
+
+            return {
+                "success": False,
+                "message": f"Calendar update failed for appointment {appointment.id}",
+                "error": request.error,
+                "appointment_id": appointment.id
+            }
+
+    except Exception as e:
+        logger.error(f"Error handling appointment calendar update callback: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/appointment-calendar-deleted")
+def appointment_calendar_deleted(
+    request: AppointmentCalendarDeletedRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Callback endpoint for N8N to notify backend about appointment calendar deletion
+
+    Called by N8N workflow after attempting to delete a Google Calendar event for an appointment
+    """
+    try:
+        # Get the appointment (if it still exists)
+        appointment = db.query(Cita).filter(Cita.id == request.appointment_id).first()
+
+        if request.success:
+            if appointment:
+                # Clear the calendar event ID since it's been deleted
+                appointment.google_calendar_event_id = None
+                db.commit()
+                db.refresh(appointment)
+
+            logger.info(
+                f"Successfully deleted calendar event for appointment {request.appointment_id}: "
+                f"event_id={request.google_calendar_event_id}"
+            )
+
+            return {
+                "success": True,
+                "message": f"Calendar event deleted for appointment {request.appointment_id}",
+                "appointment_id": request.appointment_id,
+                "google_calendar_event_id": request.google_calendar_event_id
+            }
+        else:
+            # Log the error
+            logger.error(
+                f"N8N failed to delete calendar event for appointment {request.appointment_id}: "
+                f"{request.error or 'Unknown error'}"
+            )
+
+            return {
+                "success": False,
+                "message": f"Calendar deletion failed for appointment {request.appointment_id}",
+                "error": request.error,
+                "appointment_id": request.appointment_id
+            }
+
+    except Exception as e:
+        logger.error(f"Error handling appointment calendar deletion callback: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 @router.get("/doctor/{doctor_id}/status")
 def get_doctor_calendar_status(
     doctor_id: int,
@@ -160,6 +282,18 @@ def options_calendar_created():
 
 @router.options("/doctor-calendar-error")
 def options_calendar_error():
+    """Handle CORS preflight"""
+    return {}
+
+
+@router.options("/appointment-calendar-updated")
+def options_appointment_updated():
+    """Handle CORS preflight"""
+    return {}
+
+
+@router.options("/appointment-calendar-deleted")
+def options_appointment_deleted():
     """Handle CORS preflight"""
     return {}
 
