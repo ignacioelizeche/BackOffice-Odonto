@@ -648,6 +648,7 @@ def cancel_appointment(
         return CreateAppointmentResponse(
             success=True,
             appointment_id=appointment.id,
+            doctor_calendar_id=doctor.google_calendar_id if doctor else None,
             message="Cita cancelada exitosamente"
         )
 
