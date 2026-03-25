@@ -113,6 +113,19 @@ class AvailableTimesResponse(BaseModel):
     message: str
 
 
+class NextAvailableDateInfo(BaseModel):
+    date: str  # YYYY-MM-DD
+    display: str  # DD/MM (Lunes)
+    hasSlots: bool
+
+
+class NextAvailableDatesResponse(BaseModel):
+    success: bool
+    doctor: Dict[str, Any]  # {id, name, preferred_slot_duration, minimum_slot_duration}
+    dates: List[NextAvailableDateInfo]
+    message: str
+
+
 class AppointmentInfo(BaseModel):
     id: int
     doctor_id: int
@@ -272,6 +285,78 @@ def get_available_times(
 
     except Exception as e:
         logger.error(f"Error getting available times: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/next-available-dates", response_model=NextAvailableDatesResponse)
+def get_next_available_dates(
+    request: GetAvailableDatesRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Get next 7 available dates with doctor info (preferred slot duration).
+
+    This endpoint returns the doctor's preferred slot duration and information
+    about which dates have available slots for WhatsApp flow.
+
+    Called by N8N for smart date selection in agendamiento flow.
+    """
+    try:
+        doctor = db.query(Doctor).filter(
+            (Doctor.id == request.doctor_id) &
+            (Doctor.empresa_id == request.empresa_id)
+        ).first()
+
+        if not doctor:
+            return NextAvailableDatesResponse(
+                success=False,
+                doctor={},
+                dates=[],
+                message="Doctor no encontrado"
+            )
+
+        # Generate next 7 days with availability info
+        dates_list = []
+        today = datetime.now().date()
+
+        for i in range(1, 8):
+            date = today + timedelta(days=i)
+            date_str = date.strftime("%Y-%m-%d")
+            day_name = _get_spanish_day_name(date)
+
+            # Check if date has available slots
+            available_slots = get_available_slots(
+                request.doctor_id,
+                date_str,
+                db
+            )
+            has_slots = len(available_slots) > 0
+
+            dates_list.append(
+                NextAvailableDateInfo(
+                    date=date_str,
+                    display=f"{date.strftime('%d/%m')} ({day_name})",
+                    hasSlots=has_slots
+                )
+            )
+
+        # Doctor info with slot duration preferences
+        doctor_info = {
+            "id": doctor.id,
+            "name": doctor.name,
+            "preferred_slot_duration": doctor.preferred_slot_duration or 30,
+            "minimum_slot_duration": doctor.minimum_slot_duration or 5
+        }
+
+        return NextAvailableDatesResponse(
+            success=True,
+            doctor=doctor_info,
+            dates=dates_list,
+            message="Próximas fechas disponibles"
+        )
+
+    except Exception as e:
+        logger.error(f"Error getting next available dates: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
