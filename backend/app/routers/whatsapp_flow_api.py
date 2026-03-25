@@ -294,10 +294,10 @@ def get_next_available_dates(
     db: Session = Depends(get_db)
 ):
     """
-    Get next 7 available dates with doctor info (preferred slot duration).
+    Get next 7 AVAILABLE dates with doctor info (preferred slot duration).
 
-    This endpoint returns the doctor's preferred slot duration and information
-    about which dates have available slots for WhatsApp flow.
+    This endpoint returns the doctor's preferred slot duration and only dates
+    that have available slots (no gaps for unavailable days).
 
     Called by N8N for smart date selection in agendamiento flow.
     """
@@ -315,14 +315,16 @@ def get_next_available_dates(
                 message="Doctor no encontrado"
             )
 
-        # Generate next 7 days with availability info
+        # Generate next 7 AVAILABLE dates (only those with slots)
         dates_list = []
         today = datetime.now().date()
+        current_date = today + timedelta(days=1)
+        max_iterations = 365  # Safety limit: look up to 1 year ahead
 
-        for i in range(1, 8):
-            date = today + timedelta(days=i)
-            date_str = date.strftime("%Y-%m-%d")
-            day_name = _get_spanish_day_name(date)
+        iterations = 0
+        while len(dates_list) < 7 and iterations < max_iterations:
+            date_str = current_date.strftime("%Y-%m-%d")
+            day_name = _get_spanish_day_name(current_date)
 
             # Check if date has available slots
             available_slots = get_available_slots(
@@ -330,15 +332,19 @@ def get_next_available_dates(
                 date_str,
                 db
             )
-            has_slots = len(available_slots) > 0
 
-            dates_list.append(
-                NextAvailableDateInfo(
-                    date=date_str,
-                    display=f"{date.strftime('%d/%m')} ({day_name})",
-                    hasSlots=has_slots
+            # Only add if it has slots
+            if len(available_slots) > 0:
+                dates_list.append(
+                    NextAvailableDateInfo(
+                        date=date_str,
+                        display=f"{current_date.strftime('%d/%m')} ({day_name})",
+                        hasSlots=True
+                    )
                 )
-            )
+
+            current_date += timedelta(days=1)
+            iterations += 1
 
         # Doctor info with slot duration preferences
         doctor_info = {
