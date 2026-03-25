@@ -180,6 +180,92 @@ export const createUserSchema = z
 
 export type CreateUserFormValues = z.infer<typeof createUserSchema>
 
+// ============= Validaciones para Editar Usuario =============
+export const editUserSchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "El nombre debe tener al menos 3 caracteres")
+      .max(100, "El nombre no puede exceder 100 caracteres"),
+    email: z
+      .string()
+      .email("Email inválido"),
+    role: z
+      .enum(["Administrador", "Doctor", "Recepcionista", "Asistente"], {
+        errorMap: () => ({ message: "Selecciona un rol válido" }),
+      }),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasNewPassword = Boolean(data.password && data.password.trim().length > 0)
+    const hasConfirmPassword = Boolean(data.confirmPassword && data.confirmPassword.trim().length > 0)
+
+    if (!hasNewPassword && !hasConfirmPassword) {
+      return
+    }
+
+    if (!hasNewPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: "Ingresa la nueva contraseña",
+      })
+      return
+    }
+
+    if (!hasConfirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Confirma la nueva contraseña",
+      })
+      return
+    }
+
+    if ((data.password || "").length < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: "La contraseña debe tener al menos 8 caracteres",
+      })
+    }
+
+    if (!/[A-Z]/.test(data.password || "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: "Debe contener al menos una mayúscula",
+      })
+    }
+
+    if (!/[a-z]/.test(data.password || "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: "Debe contener al menos una minúscula",
+      })
+    }
+
+    if (!/[0-9]/.test(data.password || "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: "Debe contener al menos un número",
+      })
+    }
+
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Las contraseñas no coinciden",
+      })
+    }
+  })
+
+export type EditUserFormValues = z.infer<typeof editUserSchema>
+
 // ============= Validaciones para Notificaciones =============
 export const notificationsConfigSchema = z.object({
   notifications: z.array(

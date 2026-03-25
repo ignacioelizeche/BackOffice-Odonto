@@ -540,6 +540,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     role: Optional[Role] = None
+    password: Optional[str] = Field(default=None, min_length=8)
 
 class UserResponse(BaseModel):
     id: int

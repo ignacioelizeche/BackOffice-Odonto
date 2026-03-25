@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Clock, Key, Loader, Shield, Trash2, Users } from "lucide-react"
+import { AlertCircle, Clock, Key, Loader, Pencil, Shield, Trash2, Users } from "lucide-react"
 import { configService, type User } from "@/services/config.service"
 import {
   passwordChangeSchema,
@@ -29,6 +29,7 @@ import {
   type SecurityConfigFormValues,
 } from "@/lib/validations/config"
 import { AddUserDialog } from "@/components/configuracion/add-user-dialog"
+import { EditUserDialog } from "@/components/configuracion/edit-user-dialog"
 
 function getRoleBadge(role: string) {
   switch (role) {
@@ -49,8 +50,18 @@ export function SeguridadTab() {
   const [users, setUsers] = useState<User[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [userToDelete, setUserToDelete] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const reloadUsers = async () => {
+    try {
+      const data = await configService.getUsers()
+      setUsers(data)
+    } catch (error) {
+      console.error("Error reloading users:", error)
+    }
+  }
 
   // Form: Cambio de contraseña
   const passwordForm = useForm<PasswordChangeFormValues>({
@@ -161,7 +172,7 @@ export function SeguridadTab() {
     setIsDeleting(true)
     try {
       await configService.deleteUser(userId)
-      setUsers(users.filter(u => u.id !== userId))
+      await reloadUsers()
       setUserToDelete(null)
       toast.success("Usuario eliminado exitosamente")
     } catch (error) {
@@ -175,12 +186,11 @@ export function SeguridadTab() {
 
   // 6. Manejar nuevo usuario agregado
   const handleUserAdded = async () => {
-    try {
-      const data = await configService.getUsers()
-      setUsers(data)
-    } catch (error) {
-      console.error("Error reloading users:", error)
-    }
+    await reloadUsers()
+  }
+
+  const handleUserUpdated = async () => {
+    await reloadUsers()
   }
 
   return (
@@ -455,6 +465,13 @@ export function SeguridadTab() {
                     <Clock className="h-3 w-3" />
                     {user.lastAccess}
                   </span>
+                  <button
+                    onClick={() => setUserToEdit(user)}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span className="sr-only">Editar usuario</span>
+                  </button>
                   {user.role !== "Administrador" && (
                     <button
                       onClick={() => setUserToDelete(user.id)}
@@ -477,6 +494,13 @@ export function SeguridadTab() {
         isOpen={isAddUserDialogOpen}
         onClose={() => setIsAddUserDialogOpen(false)}
         onUserAdded={handleUserAdded}
+      />
+
+      <EditUserDialog
+        isOpen={userToEdit !== null}
+        user={userToEdit}
+        onClose={() => setUserToEdit(null)}
+        onUserUpdated={handleUserUpdated}
       />
 
       {/* Alert Dialog para confirmar eliminación */}

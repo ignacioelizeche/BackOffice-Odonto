@@ -553,9 +553,50 @@ def update_user(
             headers={"X-Error-Code": "FORBIDDEN"}
         )
 
-    update_data = user_data.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(user, field, value)
+    # Validate unique email when updated
+    if user_data.email and user_data.email != user.email:
+        existing = db.query(Usuario).filter(Usuario.email == user_data.email).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email ya está registrado",
+                headers={"X-Error-Code": "EMAIL_EXISTS"}
+            )
+
+    # Prevent removing the last admin of the enterprise
+    if (
+        user_data.role
+        and user.role == RoleEnum.administrador
+        and user_data.role != RoleEnum.administrador
+    ):
+        admin_count = db.query(Usuario).filter(
+            (Usuario.role == RoleEnum.administrador) &
+            (Usuario.empresa_id == current_user.empresa_id)
+        ).count()
+        if admin_count == 1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No puede modificar el rol del único administrador",
+                headers={"X-Error-Code": "CANNOT_UPDATE_LAST_ADMIN"}
+            )
+
+    if user_data.name is not None:
+        user.name = user_data.name
+        name_parts = [part for part in user_data.name.strip().split() if part]
+        if name_parts:
+            if len(name_parts) == 1:
+                user.initials = name_parts[0][:2].upper()
+            else:
+                user.initials = (name_parts[0][0] + name_parts[-1][0]).upper()
+
+    if user_data.email is not None:
+        user.email = user_data.email
+
+    if user_data.role is not None:
+        user.role = user_data.role
+
+    if user_data.password:
+        user.hashed_password = hash_password(user_data.password)
 
     db.commit()
     return UserUpdateResponse()
@@ -584,9 +625,9 @@ def delete_user(
         )
 
     # Check if it's the last admin in the enterprise
-    if user.role == "Administrador":
+    if user.role == RoleEnum.administrador:
         admin_count = db.query(Usuario).filter(
-            (Usuario.role == "Administrador") &
+            (Usuario.role == RoleEnum.administrador) &
             (Usuario.empresa_id == current_user.empresa_id)
         ).count()
         if admin_count == 1:
